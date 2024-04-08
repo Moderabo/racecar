@@ -1,0 +1,14 @@
+Before controller:
+event0,1,2,3,4,5,6,7,8,9,10,11,12,16
+mice
+mouse0,1
+
+
+Dualsense:
+js0,1
+event 13,14,15
+mouse2
+
+event13: Knappar och analog
+event14: Kaos
+event15: Touchpad
