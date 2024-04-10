@@ -19,7 +19,7 @@ const int ADDR = 25;
 #define TW_SR_DATA_NOT_ACK	0x88
 #define TW_SR_STOP			0xA0
 
-volatile uint8_t i2c_byte_cnt = 0;  // Tell wich byte in sequence
+volatile uint8_t i2c_byte_cnt = 0;  // Tell which byte in sequence
 volatile uint8_t control_switch = 0;  // Key to gasrelage or styr
 volatile uint16_t control_signal = 0;  // 
 
@@ -59,8 +59,6 @@ int main(void)
 	
 	cli();
 	
-	DDRA = 0xff;
-	
 	// TWI
 	i2c_init();	
 	
@@ -84,7 +82,6 @@ ISR(TWI_vect)
 	switch(TW_STATUS)
 	{
 		case TW_SR_SLA_ACK:
-			PORTA = 0;
 			TWCR = (1<<TWIE)|(1<<TWINT)|(1<<TWEA)|(1<<TWEN);  // Enable new interrupt
 			break;
 		case TW_SR_DATA_ACK:
@@ -117,7 +114,6 @@ ISR(TWI_vect)
 				default:
 					break;
 			}
-			PORTA = (OCR1B>>8);
 			i2c_byte_cnt = 0;
 			control_switch = 0;
 			control_signal = 0;
