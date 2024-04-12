@@ -19,3 +19,10 @@ class DataOverview(tk.Frame):
 
         self.text_area_values = tk.Message(info_widget, font=("Times New Roman", 15), justify="left", anchor="nw", bg="white", borderwidth=0, highlightthickness=0)
         self.text_area_values.place(x=150, y=0, height=400, width=150)
+
+    def update(self):
+        text_value = ""
+        for value in information.data.values():
+            text_value += str(value) + "\n"
+        text_value += str(information.data_list[-1])
+        self.text_area_values.config(text=text_value)

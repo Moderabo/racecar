@@ -2,8 +2,6 @@ from inputs import get_gamepad
 import math
 import threading
 
-import paho.mqtt.client as mqtt
-
 class XboxController(object):
     MAX_TRIG_VAL = math.pow(2, 8)
     MAX_JOY_VAL = math.pow(2, 15)
@@ -33,6 +31,7 @@ class XboxController(object):
 
         self._monitor_thread = threading.Thread(target=self._monitor_controller, args=())
         self._monitor_thread.daemon = True
+
         self._monitor_thread.start()
 
 
@@ -44,7 +43,6 @@ class XboxController(object):
         rt = self.RightTrigger
         lt = self.LeftTrigger
         return [x_cord, y_cord, rb, lb, rt, lt]
-
 
     def _monitor_controller(self):
         while True:
@@ -91,75 +89,3 @@ class XboxController(object):
                 elif event.code == 'BTN_TRIGGER_HAPPY4':
                     self.DownDPad = event.state
 
-def clamp(minimum, x, maximum):
-    return max(minimum, min(x, maximum))
-
-def on_publish(client, userdata, mid, reason_code, properties):
-    # reason_code and properties will only be present in MQTTv5. It's always unset in MQTTv3
-    try:
-        userdata.remove(mid)
-    except KeyError:
-        print("on_publish() is called with a mid not present in unacked_publish")
-        print("This is due to an unavoidable race-condition:")
-        print("* publish() return the mid of the message sent.")
-        print("* mid from publish() is added to unacked_publish by the main thread")
-        print("* on_publish() is called by the loop_start thread")
-        print("While unlikely (because on_publish() will be called after a network round-trip),")
-        print(" this is a race-condition that COULD happen")
-        print("")
-        print("The best solution to avoid race-condition is using the msg_info from publish()")
-        print("We could also try using a list of acknowledged mid rather than removing from pending list,")
-        print("but remember that mid could be re-used !")
-
-if __name__ == '__main__':
-    controller = XboxController()
-    is_on = True
-    end_it = 0
-
-    unacked_publish = set()
-    mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-    mqttc.on_publish = on_publish
-
-    mqttc.user_data_set(unacked_publish)
-    mqttc.connect("10.42.0.1")
-    mqttc.loop_start()
-
-    while is_on:
-        controller_inputs = controller.read()
-        x_cord = controller_inputs[0]
-        rt = controller_inputs[4]
-        lt = controller_inputs[5]
-
-        servo_signal = x_cord
-
-        motor = rt * 0.5 - lt * 0.5
-
-        if controller_inputs[2] != 0 and controller_inputs[3] != 0:
-            is_on = False
-            end_it = 1
-
-        if -0.1 <= abs(servo_signal) <= 0.1:
-            servo_signal = 0.0
-        else:
-            servo_signal = clamp(-1, servo_signal, 1)
-
-        motor = clamp(-1.0, motor, 1.0)
-
-        print(str(servo_signal) + " "+ str(motor) + " " + str(end_it))
-
-        # Our application produce some messages
-        msg_info = mqttc.publish("commands", str(servo_signal) + " "+ str(motor) + " " + str(end_it), qos=1)
-        unacked_publish.add(msg_info.mid)
-
-        # Wait for all message to be published
-        # while len(unacked_publish):
-        #     time.sleep(0.001)
-
-        # Due to race-condition described above, the following way to wait for all publish is safer
-        msg_info.wait_for_publish()
-
-        if controller_inputs[2] != 0 and controller_inputs[3] != 0:
-            is_on = False
-
-    mqttc.disconnect()
-    mqttc.loop_stop()

@@ -1,9 +1,15 @@
 import tkinter as tk
-import path_overview as path_overview
+import path_overview
 import terminal
 import data_overview
-import information
-import mqt
+import mqtt
+import rorry
+import xbox
+import read_keyboard
+import paho.mqtt.client as client
+
+def clamp(minimum, x, maximum):
+    return max(minimum, min(x, maximum))
 
 class GUI(tk.Tk):
 
@@ -26,24 +32,94 @@ class GUI(tk.Tk):
         self.data_widget = data_overview.DataOverview(self)
         #============================
 
-        self.mqttc = mqt.mqttc
+        #=====Set up MQTT client=====
+        self.unacked_publish = set()
+        self.mqtt_client = client.Client(client.CallbackAPIVersion.VERSION2)
+        self.mqtt_client.on_connect = mqtt.on_connect
+        self.mqtt_client.on_message = mqtt.on_message
+        self.mqtt_client.on_subscribe = mqtt.on_subscribe
+        self.mqtt_client.on_unsubscribe = mqtt.on_unsubscribe
+        self.mqtt_client.on_publish = mqtt.on_publish
+        self.mqtt_client.user_data_set(self.unacked_publish)
+        self.mqtt_client.connect("10.42.0.1")
+        #=============================
+
+        self.controller = xbox.XboxController()
+        self.steering_mode = "stop"
 
         self.update_GUI()
+        self.is_on = True
+        self.steering()
+
+        self.kbd = read_keyboard.Keyboard()
 
     def __del__(self):
         return
 
-    def change_driving_mode(self):
+    def change_driving_mode(self, mode):
+        if self.steering_mode == "stop":
+            self.mqtt_client.loop_start()
+        msg_info = self.mqtt_client.publish("commands", "0 0 0", qos=1)
+        self.unacked_publish.add(msg_info.mid)
+        msg_info.wait_for_publish()
+        self.steering_mode = mode
         return
 
     def update_GUI(self): 
-        text_value = ""
-        for value in information.data.values():
-            text_value += str(value) + "\n"
-        text_value += str(mqt.data_list[-1])
-        self.data_widget.text_area_values.config(text=text_value)
+        self.data_widget.update()
         self.after(100, self.update_GUI)
 
+    def steering(self):
+        if self.steering_mode == "manual":
+
+            controller_inputs = self.controller.read()
+            x_cord = controller_inputs[0]
+            rt = controller_inputs[4]
+            lt = controller_inputs[5]
+
+            servo_signal = x_cord
+            motor = rt * 0.5 - lt * 0.5
+
+            if -0.1 <= abs(servo_signal) <= 0.1:
+                servo_signal = 0.0
+            else:
+                servo_signal = clamp(-1, servo_signal, 1)
+
+            motor = clamp(-1.0, motor, 1.0)
+
+            print(str(servo_signal) + " "+ str(motor) + " " + "0")
+
+            msg_info = self.mqtt_client.publish("commands", str(servo_signal) + " "+ str(motor) + " " + "0", qos=1)
+            self.unacked_publish.add(msg_info.mid)
+
+            msg_info.wait_for_publish()
+
+        elif self.steering_mode == "wasd":
+            servo_signal = 0
+            motor = 0
+            kbd_input = self.kbd.read()
+            if kbd_input[0] == 1:
+                motor = 0.3
+            elif kbd_input[2] == 1:
+                motor = -0.3
+            if kbd_input[1] == 1:
+                servo_signal = -1
+            elif kbd_input[3] == 1:
+                servo_signal = 1
+            
+            print(str(servo_signal) + " "+ str(motor) + " " + "0")
+
+            msg_info = self.mqtt_client.publish("commands", str(servo_signal) + " "+ str(motor) + " " + "0", qos=1)
+            self.unacked_publish.add(msg_info.mid)
+
+            msg_info.wait_for_publish()
+
+        elif self.steering_mode == "stop":
+            self.mqtt_client.loop_stop()
+            
+
+        self.after(100, self.steering)
+        return
 
 UI = GUI("CarGoBrr2")
 UI.mainloop()
