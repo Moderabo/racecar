@@ -25,17 +25,24 @@
 
 
 #define CONTROL_AVR   0x19
+#define SENSOR_AVR    34
 using namespace std;
 
 class I2CConnection
 {
 	//Setup I2C communication
 public:
-	I2CConnection(int avr_adr) : fd {wiringPiI2CSetup(avr_adr)}
+	I2CConnection()
 	{
-		if (fd == -1){
+		fd_CONTROL = wiringPiI2CSetup(25);
+		if (fd_CONTROL == -1){
 			std::cout << "Failed to init I2C.\n";
 		}
+
+		fd_SENSOR = wiringPiI2CSetup(34);
+		 if (fd_SENSOR  == -1){
+                        std::cout << "Failed to init I2C.\n";
+                }
 	}
 
 void gas(float x)
@@ -47,8 +54,9 @@ void gas(float x)
 	}
 	uint16_t x_2byte {(0xffff * (1 + x)) / 2};
 	cout << "Gas: " << x_2byte << '\n';
-	result = wiringPiI2CWriteReg16(fd, 0x02, x_2byte);
+	result = wiringPiI2CWriteReg16(fd_CONTROL, 0x02, x_2byte);
 }
+
 
 void steer(float x)  // -1 left, 1 right
 {
@@ -59,16 +67,36 @@ void steer(float x)  // -1 left, 1 right
 	}
 	uint16_t x_2byte {(0xffff * (1 + x)) / 2};
 	cout << "Steer: " << x_2byte << '\n';
-	result = wiringPiI2CWriteReg16(fd, 0x01, x_2byte);
+	result = wiringPiI2CWriteReg16(fd_CONTROL, 0x01, x_2byte);
 }
+
+
+int get_speed()
+{
+        int result;
+
+        result = wiringPiI2CRead(fd_SENSOR);
+	cout << "Speed: " << result << '\n';
+	return result;
+}
+
 private:
-	int fd;
+	int fd_CONTROL;
+	int fd_SENSOR;
 };
 
 
+uint64_t timestamp()
+{
+        auto now = std::chrono::system_clock::now();
+        auto tse = now.time_since_epoch();
+        auto msTm = std::chrono::duration_cast<std::chrono::milliseconds>(tse);
+        return uint64_t(msTm.count());
+}
+
 const string SERVER_ADDRESS	{ "10.42.0.1" };
-const string CLIENT_ID		{ "CHANGE_THIS1sSd" };
-const string TOPIC 			{ "commands" };
+const string CLIENT_ID		{ "CGgggga666" };
+const string TOPIC 		{ "commands" };
 
 const int  QOS = 1;
 
@@ -76,8 +104,13 @@ const int  QOS = 1;
 
 int main(int argc, char* argv[])
 {
+	uint64_t        t = timestamp(),
+                        tlast = t,
+                        tstart = t;
+
+	int speed = 0;
 	// Setup I2C communication
-	I2CConnection i2c_connection {CONTROL_AVR};
+	I2CConnection i2c_connection;
 
 
 	mqtt::async_client cli(SERVER_ADDRESS, CLIENT_ID);
@@ -112,18 +145,21 @@ int main(int argc, char* argv[])
 		// This just exits if the client is disconnected.
 		// (See some other examples for auto or manual reconnect)
 
+
+		auto top = mqtt::topic(cli, "data", QOS);
+
 		cout << "Waiting for messages on topic: '" << TOPIC << "'" << endl;
 
 
-            while (true) 
-            {
-				auto msg = cli.consume_message();
-                
+                while (true)
+              	{
+		auto msg = cli.consume_message();
+
                 if (!msg)
                 {
-					break;
-				}
-					
+			break;
+		}
+
                 cout << msg->get_topic() << ": " << msg->to_string() << endl;
 
 				// Converts MQTT message to a vector consisting off floats
@@ -149,8 +185,16 @@ int main(int argc, char* argv[])
 				}
 
 				i2c_connection.steer(commands_value_list[0]);
-				sleep(0.11);
+				sleep(0.1);
 				i2c_connection.gas(commands_value_list[1]);
+				sleep(0.01);
+				speed = i2c_connection.get_speed();
+
+				t = timestamp();
+                        	tlast = t - tstart;
+				std::string payload = to_string(tlast)	+ " " + to_string(speed);
+				top.publish(payload);
+
             }
 
 
@@ -160,7 +204,7 @@ int main(int argc, char* argv[])
 
 		if (cli.is_connected()) {
 			cout << "\nShutting down and disconnecting from the MQTT server..." << flush;
-			cli.unsubscribe(TOPIC)->wait();
+			//cli.unsubscribe(TOPIC)->wait();
 			cli.stop_consuming();
 			cli.disconnect()->wait();
 			cout << "OK" << endl;
