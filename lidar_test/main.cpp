@@ -3,6 +3,12 @@
  *
  */
 
+// I2C includes
+#include <iostream>
+#include <wiringPiI2C.h>
+#include <unistd.h>
+
+// lidar includes
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -14,12 +20,88 @@
 #include "sl_lidar.h" 
 #include "sl_lidar_driver.h"
 #include <utility>
+
 #ifndef _countof
 #define _countof(_Array) (int)(sizeof(_Array) / sizeof(_Array[0]))
 #endif
 
+#define CONTROL_AVR   0x19
+#define SENSOR_AVR    34
 
+using namespace std;
 using namespace sl;
+
+// define the I2C interface
+class I2CConnection
+{
+	//Setup I2C communication
+public:
+	I2CConnection()
+	{
+		fd_CONTROL = wiringPiI2CSetup(25);
+		if (fd_CONTROL == -1){
+			std::cout << "Failed to init I2C.\n";
+		}
+
+		fd_SENSOR = wiringPiI2CSetup(34);
+		 if (fd_SENSOR  == -1){
+                        std::cout << "Failed to init I2C.\n";
+                }
+	}
+
+void gas(float x)
+{
+	int result;
+	if ( x < -1 || x > 1 )
+	{
+		return;
+	}
+	uint16_t x_2byte {(0xffff * (1 + x)) / 2};
+	cout << "Gas: " << x_2byte << '\n';
+	result = wiringPiI2CWriteReg16(fd_CONTROL, 0x02, x_2byte);
+}
+
+
+void steer(float x)  // -1 left, 1 right
+{
+	int result;
+	if ( x < -1 || x > 1 )
+	{
+		return;
+	}
+	uint16_t x_2byte {(0xffff * (1 + x)) / 2};
+	cout << "Steer: " << x_2byte << '\n';
+	result = wiringPiI2CWriteReg16(fd_CONTROL, 0x01, x_2byte);
+}
+
+
+int get_speed()
+{
+        int result;
+
+        result = wiringPiI2CRead(fd_SENSOR);
+	cout << "Speed: " << result << '\n';
+	return result;
+}
+
+private:
+	int fd_CONTROL;
+	int fd_SENSOR;
+};
+
+uint64_t timestamp()
+{
+        auto now = std::chrono::system_clock::now();
+        auto tse = now.time_since_epoch();
+        auto msTm = std::chrono::duration_cast<std::chrono::milliseconds>(tse);
+        return uint64_t(msTm.count());
+}
+
+const string SERVER_ADDRESS	{ "10.42.0.1" };
+const string CLIENT_ID		{ "CGgggga666" };
+const string TOPIC 		{ "commands" };
+
+const int  QOS = 1;
 
 typedef std::vector<std::pair<float,float>> Cluster;
 typedef std::pair<float,float> Cone;
@@ -193,7 +275,10 @@ void saveGates(std::vector<Gate> &gates)
 int main(int argc, const char * argv[]) {
 
     signal(SIGINT, ctrlc);
-    
+	
+	// Setup I2C communication
+	I2CConnection i2c_connection;
+
     // Define the result
     sl_result     op_result;
     
@@ -212,7 +297,7 @@ int main(int argc, const char * argv[]) {
 
 
     // fetech result and print it out, do it 10 times
-    for(int i = 0; i < 1; ++i)
+    for(int i = 0; i < 10000000000; ++i)
     {
         sl_lidar_response_measurement_node_hq_t  nodes[8192];
         size_t   count = _countof(nodes);
@@ -290,6 +375,11 @@ int main(int argc, const char * argv[]) {
 
         std::cout << next_gate_midpoint.first << ','
                   << next_gate_midpoint.second << std::endl;
+
+		float angle_to_steer = atan2(next_gate_midpoint.first,next_gate_midpoint.second) / M_PI_2;
+
+		i2c_connection.steer(angle_to_steer);
+
         if (ctrl_c_pressed){ 
             break;
         }
