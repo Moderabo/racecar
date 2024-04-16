@@ -1,4 +1,6 @@
 import tkinter as tk
+import os
+import time
 import path_overview
 import terminal
 import data_overview
@@ -14,6 +16,10 @@ def clamp(minimum, x, maximum):
 class GUI(tk.Tk):
 
     def __init__(self, title):
+
+        os.system(f'''cmd /c "netsh wlan connect name=CarGoBRR2"''')
+        time.sleep(5)
+
         #=====Set up main window=====
         width = 800
         height = 600
@@ -44,7 +50,11 @@ class GUI(tk.Tk):
         self.mqtt_client.connect("10.42.0.1")
         #=============================
 
-        self.controller = xbox.XboxController()
+        try:
+            self.controller = xbox.XboxController()
+        except:
+            print("No controller detected!")
+        
         self.steering_mode = "stop"
 
         self.update_GUI()
@@ -54,6 +64,7 @@ class GUI(tk.Tk):
         self.kbd = read_keyboard.Keyboard()
 
     def __del__(self):
+        os.system(f'''cmd /c "netsh wlan connect name=eduroam"''')
         return
 
     def change_driving_mode(self, mode):
@@ -107,7 +118,7 @@ class GUI(tk.Tk):
             elif kbd_input[3] == 1:
                 servo_signal = 1
             
-            print(str(servo_signal) + " "+ str(motor) + " " + "0")
+            #print(str(servo_signal) + " "+ str(motor) + " " + "0")
 
             msg_info = self.mqtt_client.publish("commands", str(servo_signal) + " "+ str(motor) + " " + "0", qos=1)
             self.unacked_publish.add(msg_info.mid)

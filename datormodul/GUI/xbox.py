@@ -1,4 +1,4 @@
-from inputs import get_gamepad
+from inputs import get_gamepad, devices
 import math
 import threading
 
@@ -29,11 +29,13 @@ class XboxController(object):
         self.UpDPad = 0
         self.DownDPad = 0
 
-        self._monitor_thread = threading.Thread(target=self._monitor_controller, args=())
-        self._monitor_thread.daemon = True
+        if len(devices.gamepads) <0:
+            self._monitor_thread = threading.Thread(target=self._monitor_controller, args=())
+            self._monitor_thread.daemon = True
 
-        self._monitor_thread.start()
-
+            self._monitor_thread.start()
+        else:
+            print("No controller detected.")
 
     def read(self): # return the buttons/triggers that you care about in this methode
         x_cord = self.LeftJoystickX
@@ -88,4 +90,3 @@ class XboxController(object):
                     self.UpDPad = event.state
                 elif event.code == 'BTN_TRIGGER_HAPPY4':
                     self.DownDPad = event.state
-

@@ -43,6 +43,6 @@ class Terminal(tk.Frame):
         print(command)
         usr_input.delete(0, "end")
         terminal.config(state="normal")
-        terminal.insert("insert", "\n" + command)
+        terminal.insert("end", "\n" + command)
         terminal.config(state="disabled")
         terminal.see("end")

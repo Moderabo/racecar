@@ -4,7 +4,7 @@ def on_subscribe(client, userdata, mid, reason_code_list, properties):
     # Since we subscribed only for a single channel, reason_code_list contains
     # a single entry
     if reason_code_list[0].is_failure:
-        print(f"Broker rejected you subscription: {reason_code_list[0]}")
+        print(f"Broker rejected your subscription: {reason_code_list[0]}")
     else:
         print(f"Broker granted the following QoS: {reason_code_list[0].value}")
 
@@ -22,6 +22,8 @@ def on_message(client, userdata, message):
     if message.topic == "commands":
         information.data_list.append(message.payload)
         information.data_list.pop(0)
+    elif message.topic == "data":
+        print(message.payload)
     
     # We only want to process 10 messages
     if len(userdata) >= 10:
@@ -34,7 +36,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
     else:
         # we should always subscribe from on_connect callback to be sure
         # our subscribed is persisted across reconnections.
-        client.subscribe("commands")
+        client.subscribe([("commands",0), ("data", 0)])
 
 def on_publish(client, userdata, mid, reason_code, properties):
     # reason_code and properties will only be present in MQTTv5. It's always unset in MQTTv3
