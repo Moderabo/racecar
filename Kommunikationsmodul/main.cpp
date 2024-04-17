@@ -270,7 +270,7 @@ int main(int argc, const char * argv[]) {
     signal(SIGINT, ctrlc);
 	
 	// Setup I2C communication
-	I2CConnection i2c_connection;
+	I2CConnection i2c_connection {};
 
     // Define the result
     sl_result     op_result;
