@@ -23,6 +23,7 @@ class Terminal(tk.Frame):
     def command_input(self, usr_input, terminal):
         command = usr_input.get()
         command_list = command.split(" ")
+        info_to_print = ""
 
         if command_list[0] == "exit":
             print("TERMINATING")
@@ -39,10 +40,25 @@ class Terminal(tk.Frame):
             self.parent.mqtt_client.loop_start()
         elif command_list[0] == "end":
             self.parent.is_in = False
+        elif command_list[0] == "cone" and len(command_list) > 3:
+            information.cones.append((float(command_list[1]), float(command_list[2]), float(command_list[3])))
+        elif command_list[0] == "cones":
+            print(information.cones)
+            info_to_print = str(information.cones)
+        elif command_list[0] == "rmvcone" and len(command_list) > 1:
+            information.cones.pop(int(command_list[1]))
+        else:
+            usr_input.delete(0, "end")
+            terminal.config(state="normal")
+            terminal.insert("end", "\nCommand not found: " + command)
+            terminal.config(state="disabled")
+            terminal.see("end")
+            return
 
-        print(command)
         usr_input.delete(0, "end")
         terminal.config(state="normal")
         terminal.insert("end", "\n" + command)
+        if info_to_print != "":
+            terminal.insert("end", "\n" + info_to_print)
         terminal.config(state="disabled")
         terminal.see("end")

@@ -78,6 +78,7 @@ class GUI(tk.Tk):
 
     def update_GUI(self): 
         self.data_widget.update()
+        self.path_widget.update()
         self.after(100, self.update_GUI)
 
     def steering(self):

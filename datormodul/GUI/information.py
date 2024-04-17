@@ -3,3 +3,5 @@ data = {"Hastighet"         : 12.4,
         "Hastighet lidar"   : 10.1}
 
 data_list = ["0", "0", "0"]
+
+cones = []
