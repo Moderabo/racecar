@@ -20,6 +20,7 @@
 #include "sl_lidar.h" 
 #include "sl_lidar_driver.h"
 #include <utility>
+#include <algorithm>
 
 #ifndef _countof
 #define _countof(_Array) (int)(sizeof(_Array) / sizeof(_Array[0]))
@@ -89,14 +90,6 @@ private:
 	int fd_SENSOR;
 };
 
-uint64_t timestamp()
-{
-        auto now = std::chrono::system_clock::now();
-        auto tse = now.time_since_epoch();
-        auto msTm = std::chrono::duration_cast<std::chrono::milliseconds>(tse);
-        return uint64_t(msTm.count());
-}
-
 const string SERVER_ADDRESS	{ "10.42.0.1" };
 const string CLIENT_ID		{ "CGgggga666" };
 const string TOPIC 		{ "commands" };
@@ -123,7 +116,7 @@ void filter(std::vector<std::vector<std::pair<float,float>>> &clusters)
 	// Find small clusters
 	for (int i {0}; i < clusters.size(); i++)
 	{
- 		if (clusters.at(i).size() < 5)
+ 		if (clusters.at(i).size() < 3)
     	{
 			small_clusters.push_back(i);
 	    }
@@ -293,10 +286,10 @@ int main(int argc, const char * argv[]) {
     // start scan...
     lidar->startScan(false,true);
 
-    lidar->setMotorSpeed(200);
+    //lidar->setMotorSpeed(200);
 
 
-    // fetech result and print it out, do it 10 times
+    // fetch result and print it out, do it 10 times
     for(int i = 0; i < 10000000000; ++i)
     {
         sl_lidar_response_measurement_node_hq_t  nodes[8192];
@@ -354,17 +347,17 @@ int main(int argc, const char * argv[]) {
     	// Remove small clusters
     	filter(clusters);
     
-    	saveClusters(clusters);
+    	//saveClusters(clusters);
     
 	    std::vector<std::pair<float,float>> cones;
 	    cones = findCones(clusters);
 
-	    saveCones(cones);
+	    //saveCones(cones);
 
         std::vector<Gate> gates;
         gates = findGates(cones);
 
-        saveGates(gates);
+        //saveGates(gates);
 
         Gate next_gate;
         next_gate = findNextGate(gates);
@@ -373,18 +366,25 @@ int main(int argc, const char * argv[]) {
         next_gate_midpoint.first = (next_gate.first.first + next_gate.second.first) / 2;
         next_gate_midpoint.second = (next_gate.first.second + next_gate.second.second) / 2;
 
-        std::cout << next_gate_midpoint.first << ','
-                  << next_gate_midpoint.second << std::endl;
+        //std::cout << next_gate_midpoint.first << ','
+        //          << next_gate_midpoint.second << std::endl;
 
-		float angle_to_steer = atan2(next_gate_midpoint.first,next_gate_midpoint.second) / M_PI_2;
-
-		i2c_connection.steer(angle_to_steer);
+        float angle_to_steer = atan2(next_gate_midpoint.second,next_gate_midpoint.first)*3;
+        std::cout << angle_to_steer << '\n';
+	
+    	angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
+    
+        i2c_connection.steer(angle_to_steer);
+    	sleep(0.1);
+    	i2c_connection.gas(0.1);
+    	sleep(0.1);
 
         if (ctrl_c_pressed){ 
             break;
         }
     }
 
+    i2c_connection.steer(0);
     lidar->stop();
 
     // done!
