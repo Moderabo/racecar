@@ -26,41 +26,45 @@ public:
             std::cout << "Failed to init I2C.\n";
         }
 	}
+    ~I2CConnection()
+    {
+        gas(0);
+    }
 
-void gas(float x)
-{
-	int result;
-	if ( x < -1 || x > 1 )
-	{
-		return;
-	}
-	uint16_t x_2byte {(0xffff * (1 + x)) / 2};
-	std::cout << "Gas: " << x_2byte << '\n';
-	result = wiringPiI2CWriteReg16(fd_CONTROL, 0x02, x_2byte);
-}
-
-
-void steer(float x)  // -1 left, 1 right
-{
-	int result;
-	if ( x < -1 || x > 1 )
-	{
-		return;
-	}
-	uint16_t x_2byte {(0xffff * (1 + x)) / 2};
-	std::cout << "Steer: " << x_2byte << '\n';
-	result = wiringPiI2CWriteReg16(fd_CONTROL, 0x01, x_2byte);
-}
+    void gas(float x)
+    {
+        int result;
+        if ( x < -1 || x > 1 )
+        {
+            return;
+        }
+        uint16_t x_2byte {(0xffff * (1 + x)) / 2};
+        std::cout << "Gas: " << x_2byte << '\n';
+        result = wiringPiI2CWriteReg16(fd_CONTROL, 0x02, x_2byte);
+    }
 
 
-int get_speed()
-{
-    int result;
+    void steer(float x)  // -1 left, 1 right
+    {
+        int result;
+        if ( x < -1 || x > 1 )
+        {
+            return;
+        }
+        uint16_t x_2byte {(0xffff * (1 + x)) / 2};
+        std::cout << "Steer: " << x_2byte << '\n';
+        result = wiringPiI2CWriteReg16(fd_CONTROL, 0x01, x_2byte);
+    }
 
-    result = wiringPiI2CRead(fd_SENSOR);
-    std::cout << "Speed: " << result << '\n';
-    return result;
-}
+
+    int get_speed()
+    {
+        int result;
+
+        result = wiringPiI2CRead(fd_SENSOR);
+        std::cout << "Speed: " << result << '\n';
+        return result;
+    }
 
 private:
     int fd_CONTROL;
