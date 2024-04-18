@@ -47,6 +47,8 @@ class Terminal(tk.Frame):
             info_to_print = str(information.cones)
         elif command_list[0] == "rmvcone" and len(command_list) > 1:
             information.cones.pop(int(command_list[1]))
+        elif command_list[0] == "size" and len(command_list) > 1:
+            self.parent.path_widget.change_grid(int(command_list[1]))
         else:
             usr_input.delete(0, "end")
             terminal.config(state="normal")
