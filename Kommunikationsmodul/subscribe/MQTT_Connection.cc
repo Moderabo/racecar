@@ -1,4 +1,3 @@
-#pragma once
 
 #include "MQTT_Connection.h"
 
@@ -6,6 +5,8 @@
 MQTT_Connection::MQTT_Connection()
 {
 
+	int QOS = 1;
+	std::string COMMAND_TOPIC = "commands";
 	// Create connect options
 
 	auto connOpts = mqtt::connect_options_builder()
