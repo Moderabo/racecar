@@ -39,7 +39,66 @@
 #include <cstring>
 #include "mqtt/async_client.h"
 
+// I2C includes
+#include <iostream>
+#include <wiringPiI2C.h>
+#include <unistd.h>
+
+#define CONTROL_AVR   0x19
+#define SENSOR_AVR    34
 using namespace std;
+
+class I2CConnection
+{
+        //Setup I2C communication
+public:
+        I2CConnection(int avr_adr) : fd {wiringPiI2CSetup(avr_adr)}
+        {
+                if (fd == -1){
+                        std::cout << "Failed to init I2C.\n";
+                }
+        }
+
+void gas(float x)
+{
+        int result;
+        if ( x < -1 || x > 1 )
+        {
+                return;
+        }
+        uint16_t x_2byte {(0xffff * (1 + x)) / 2};
+        cout << "Gas: " << x_2byte << '\n';
+        result = wiringPiI2CWriteReg16(fd, 0x02, x_2byte);
+}
+
+
+void steer(float x)  // -1 left, 1 right
+{
+        int result;
+        if ( x < -1 || x > 1 )
+        {
+                return;
+        }
+        uint16_t x_2byte {(0xffff * (1 + x)) / 2};
+        cout << "Steer: " << x_2byte << '\n';
+        result = wiringPiI2CWriteReg16(fd, 0x01, x_2byte);
+}
+
+
+int get_speed()
+{
+        int result;
+
+        result = wiringPiI2CRead(fd);
+        cout << "Speed: " << result << '\n';
+        return result;
+}
+
+private:
+        int fd;
+};
+
+
 
 const string DFLT_SERVER_ADDRESS	{ "10.42.0.1" };
 const string CLIENT_ID				{ "publish" };
@@ -125,6 +184,11 @@ public:
 
 int main(int argc, char* argv[])
 {
+	// Setup I2C communication
+        I2CConnection i2c_connection {CONTROL_AVR};
+        I2CConnection SENSOR_connection {SENSOR_AVR};
+
+
 	// A client that just publishes normally doesn't need a persistent
 	// session or Client ID unless it's using persistence, then the local
 	// library requires an ID to identify the persistence files.
