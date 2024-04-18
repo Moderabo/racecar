@@ -1,8 +1,11 @@
 #include <iostream>
 #include <Eigen/Dense>
- 
-using Eigen::MatrixXd;
- 
+#include "EKFslam.h"
+
+using Eigen::MatrixXd; 
+
+// This file should be used to test functionality of the EKFslamObj class
+
 int main()
 {
   MatrixXd m(2,2);
