@@ -18,7 +18,7 @@ class EKFslamObj
     ~EKFslamObj() = default;
 
     // Call this funtion to update the current state based on input params
-    int predict();
+    int predict(float TimeStep, float Steer, float Gas);
 
     // Call this function with observations to update the pose and covarr
     int correct();
@@ -35,6 +35,9 @@ class EKFslamObj
     
     // The matrix containing the covvariance for all the objects
     MatrixXd StateCovarriance;
+
+    // The lenght of the car in mm (420 from vanheden)
+    float carLength;
 
 };
 
