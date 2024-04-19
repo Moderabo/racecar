@@ -4,6 +4,7 @@
  */
 
 #include "I2C_Connection.h"
+#include "MQTT_Connection.h"
 #include "Lidar.h"
 
 using namespace std;
@@ -71,7 +72,7 @@ Gate findNextGate(std::vector<Gate> &gates)
            return gate;
         }
     }
-    
+
     Gate no_gate {};
     return no_gate;
 }
@@ -141,8 +142,11 @@ int main(int argc, const char * argv[])
 {
     signal(SIGINT, ctrlc);
 
-	// Setup I2C communication
-	I2CConnection i2c_connection {};
+    // Setup I2C communication
+    I2CConnection i2c_connection {};
+
+    // Setup MQTT communication
+    MQTT_Connection mqtt_connection {};
 
     // Initiate LiDAR
     Lidar lidar {};
@@ -153,15 +157,15 @@ int main(int argc, const char * argv[])
         lidar.update();
 
         std::vector<Cluster> clusters {lidar.getPoints()};
-    	saveClusters(clusters);
-    
-	    std::vector<Cone> cones {lidar.getCones()};
-	    saveCones(cones);
+    	//saveClusters(clusters);
+
+	std::vector<Cone> cones {lidar.getCones()};
+	//saveCones(cones);
 
         std::vector<Gate> gates;
         gates = findGates(cones);
 
-        saveGates(gates);
+        //saveGates(gates);
 
         Gate next_gate;
         next_gate = findNextGate(gates);
@@ -175,15 +179,44 @@ int main(int argc, const char * argv[])
 
         float angle_to_steer = atan2(next_gate_midpoint.y,next_gate_midpoint.x)*3;
         std::cout << angle_to_steer << '\n';
-	
-    	angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
-    
-        i2c_connection.steer(angle_to_steer);
-    	sleep(0.1);
-    	i2c_connection.gas(0.1);
-    	sleep(0.1);
 
-        if (ctrl_c_pressed){ 
+    	angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
+
+	mqtt_connection.pubCones(cones);
+
+	std::vector<float> commands_value_list;
+
+	commands_value_list = mqtt_connection.receiveMsg();
+
+	if( commands_value_list.empty() ){
+		break;
+	}
+
+	if(commands_value_list[2])
+	{
+		i2c_connection.steer(0);
+		sleep(0.01);
+           	i2c_connection.gas(0);
+		break;
+	}
+
+
+	i2c_connection.steer(commands_value_list[0]);
+	sleep(0.1);
+	i2c_connection.gas(commands_value_list[1]);
+	sleep(0.01);
+
+
+
+
+
+	//Code for automous driving
+        //i2c_connection.steer(angle_to_steer);
+    	//sleep(0.1);
+    	//i2c_connection.gas(0.1);
+    	//sleep(0.1);
+
+        if (ctrl_c_pressed){
             break;
         }
 
