@@ -2,11 +2,15 @@
  *  RPi main script
  *
  */
+#include <Eigen/Dense>
+#include <iostream>
 
 #include "I2C_Connection.h"
 #include "Lidar.h"
+#include "Planner.h"
 
 using namespace std;
+using namespace Eigen;
 
 const string SERVER_ADDRESS	{ "10.42.0.1" };
 const string CLIENT_ID		{ "CGgggga666" };
@@ -15,6 +19,13 @@ const string TOPIC 		{ "commands" };
 const int  QOS = 1;
 
 typedef std::pair<Cone,Cone> Gate;
+
+struct AltGate
+{
+    float x;
+    float y;
+    float angle;
+};
 
 bool ctrl_c_pressed;
 void ctrlc(int)
@@ -62,18 +73,48 @@ std::vector<Gate> findGates(std::vector<Cone> &cones)
 }
 
 
-Gate findNextGate(std::vector<Gate> &gates)
+std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
 {
+    std::pair<Gate,Gate> prev_next_gate {};
+
+    // Previous gate
+    for (auto &gate : gates)
+    {
+        if ( gate.first.x < 0 && gate.second.x < 0 )
+        {
+            prev_next_gate.first = gate;
+            break;
+        }
+    }
+    
+    // Next gate
     for (auto &gate : gates)
     {
         if ( gate.first.x > 0 && gate.second.x > 0 )
         {
-           return gate;
+            prev_next_gate.second = gate;
+            break;
         }
     }
     
-    Gate no_gate {};
-    return no_gate;
+    return prev_next_gate;
+}
+
+
+AltGate convertGate(Gate &gate)
+{
+    float x0 { gate.first.x };
+    float y0 { gate.first.y };
+    float x1 { gate.second.x };
+    float y1 { gate.second.y };
+
+    AltGate alt_gate;
+
+    alt_gate.x = (x1 + x0) / 2;
+    alt_gate.y = (y1 + y0) / 2;
+    alt_gate.angle = acos( (x1-x0)/ sqrt((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)) );
+    
+    return alt_gate;
 }
 
 
@@ -163,18 +204,19 @@ int main(int argc, const char * argv[])
 
         saveGates(gates);
 
-        Gate next_gate;
-        next_gate = findNextGate(gates);
+        std::pair<Gate,Gate> prev_next_gate;
+        prev_next_gate = findPrevNextGate(gates);
 
-        Point next_gate_midpoint;
-        next_gate_midpoint.x = (next_gate.first.x + next_gate.second.x) / 2;
-        next_gate_midpoint.y = (next_gate.first.y + next_gate.second.y) / 2;
+        AltGate prev_gate { convertGate(prev_next_gate.first) };
+        AltGate next_gate { convertGate(prev_next_gate.second) };
+        
+        Planner bezier {prev_gate.x, prev_gate.y, prev_gate.angle,
+                        next_gate.x, next_gate.y ,next_gate.angle};
 
-        //std::cout << next_gate_midpoint.x << ','
-        //          << next_gate_midpoint.y << std::endl;
-
-        float angle_to_steer = atan2(next_gate_midpoint.y,next_gate_midpoint.x)*3;
-        std::cout << angle_to_steer << '\n';
+        float angle = bezier.getRefAngle(0, 0, 0);
+        
+        float angle_to_steer = angle;
+        std::cout << "trying angle: " << angle_to_steer << std::endl;
 	
     	angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
     

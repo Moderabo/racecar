@@ -13,5 +13,5 @@ int main()
 
     Calc_ref angle_to_sterr(P, 2000,2000,0.4000);
 
-    angle_to_sterr.update_ref(20,100,100, M_1_PI/5.0);
+    angle_to_sterr.update_ref(size,100,100, M_1_PI/5.0);
 }

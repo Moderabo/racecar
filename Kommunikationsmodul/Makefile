@@ -1,5 +1,5 @@
 
-CCFLAGS = -pthread -Ilidar_lib
+CCFLAGS = -pthread -Ilidar_lib -IReglering
 
 LDFLAGS = -Llidar_lib -lsl_lidar_sdk -lwiringPi -lpaho-mqttpp3 -lpaho-mqtt3as
 
