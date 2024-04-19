@@ -5,7 +5,7 @@
 MQTT_Connection::MQTT_Connection()
 {
 
-	int QOS = 1;
+	int QOS = 0;
 	std::string COMMAND_TOPIC = "commands";
 	// Create connect options
 
@@ -94,11 +94,11 @@ void MQTT_Connection::pubCones(std::vector<Cone> &cones)
 
 	std::string payload = "";
 
-	for (auto cone = cones.begin(); cone != cones.end(); cone++)
+	for (int i =0 ; i < cones.size() ; i++)
         {
-		payload = payload + std::to_string(cone.x) + " " + std::to_string(cone.y ) + " " + std::to_string(cone.r) + " " ;
+		Cone cone = cones[i];
+		payload = payload + std::to_string(cone.x) + "," + std::to_string(cone.y ) + "," + std::to_string(cone.r) + ";" ;
 	}
-
 
         m_conesTopic.publish(payload);
 }
