@@ -14,54 +14,60 @@ class Calc_ref{
 
     float update_ref(int size,float car_x, float car_y, float car_angle)
     {
+        float angle_from_tangent;
+        float angle_to_goal;
+
         Eigen::VectorXf d_vec(size);
 
         for(int n=0; n <= size-1; n++ ){
 
-            float  distance = pow(pow(car_x-P(n,0),2) + pow(car_y-P(n,1),2), 0.5);
+            float  distance = pow(pow(car_x-P.coeff(n,0),2) + pow(car_y-P.coeff(n,1),2), 0.5);
             d_vec.row(n) << distance;
         }
 
         Eigen::Index index;
         float XTE = d_vec.minCoeff(&index); //minimum distance to ref line
-        float angle_from_tangent = 0;
-        float angle_to_goal = 0;
+        std::cout << index << std::endl;
 
         Eigen::MatrixXf rot_M(2,2); //inverse of a rotation matrix in cars angle.
-        rot_M(0,0) = cos(-car_angle);
-        rot_M(1,1) = sin(-car_angle);
-        rot_M(1,0) = -sin(-car_angle);
-        rot_M(1,1) = cos(-car_angle);
+        rot_M.row(0) << cos(-car_angle), sin(-car_angle);
+        rot_M.row(1) << -sin(-car_angle), cos(-car_angle);
+
         //std::cout << rot_M << std::endl;
 
         if(index + size/5 < size){
 
             Eigen::MatrixXf cords1(1,2);
-            cords1(0,0) = P(index + size/10,0) - car_x;
-            cords1(0,1) = P(index + size/10,1) - car_y;
+            cords1.row(0) << (P.coeff(index + size/10,0) - car_x), (P.coeff(index + size/10,1) - car_y);
+            //std::cout << cords1 << std::endl;
             cords1 = cords1 * rot_M; //1x2 matrix
-            float angle_to_goal = angle(cords1(0,1),cords1(0,0));
+            //std::cout << cords1 << std::endl;
+            angle_to_goal = angle(cords1.coeff(0,1),cords1.coeff(0,0));
+            std::cout << angle_to_goal << std::endl;
 
 
             Eigen::MatrixXf cords2(1,2);
-            cords2(0,0) = P(index + size/10,0) - P(index,0);
-            cords2(0,1) = P(index + size/10,1) - P(index,1);
+            cords2.row(0) << (P.coeff(index + size/10,0) - P.coeff(index,0)), (P.coeff(index + size/10,1) - P.coeff(index,1));
             cords2 = cords2 * rot_M; //1x2 matrix
-            float angle_from_tangent = angle(cords2(0,1),cords2(0,0));
+            angle_from_tangent = angle(cords2.coeff(0,1),cords2.coeff(0,0));
+            std::cout << angle_from_tangent << std::endl;
 
         }else if (index + size/5 >= size)
         {
             Eigen::MatrixXf cords1(1,2);
-            cords1(0,0) = x_goal + 500*cos(goal_angle) - car_x;
-            cords1(0,1) = x_goal + 500*sin(goal_angle) - car_y;
+            cords1.row(0) << (x_goal + 500*cos(goal_angle) - car_x), (x_goal + 500*sin(goal_angle) - car_y);
             cords1 = cords1 * rot_M; //1x2 matrix
-            float angle_to_goal = angle(cords1(0,1),cords1(0,0));
+            angle_to_goal = angle(cords1.coeff(0,1),cords1.coeff(0,0));
 
-            float angle_from_tangent = 0;
+            angle_from_tangent = 0;
         }
-        float CTS = angle_from_tangent;
+        CTS = angle_from_tangent;
 
-        refrence_angle= 0.4 * angle_to_goal + 0.1 * CTS + car_angle;
+        std::cout << CTS << std::endl;
+        std::cout << angle_to_goal << std::endl;
+        std::cout << car_angle << std::endl;
+        refrence_angle = 0.4 * angle_to_goal + 0.1 * CTS + car_angle;
+        std::cout << refrence_angle << std::endl;
         //fix some max angle like abs && angle < pi/4 or angle > -pi/4
 
         if (refrence_angle > M_1_PI/4.0){ //check max steering angle
@@ -75,7 +81,7 @@ class Calc_ref{
         
     }
 
-    float angle(float x, float y){
+    float angle(float y, float x){
         //stupid special cases with (0,-0)??       
         return atan2f(y,x);
     }
@@ -86,6 +92,7 @@ class Calc_ref{
     float XTE;
     float CTS;
     float refrence_angle;
+
 
     //Waypoints
     Eigen::MatrixXf P;

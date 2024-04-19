@@ -16,20 +16,15 @@ public:
         int r = 0;
         Eigen::MatrixXf l(size,4);
         Eigen::MatrixXf s(4,2);
-        s(0,0) = x_start;
-        s(0,1) = y_start;
-        s(1,0) = x_start + 700*cos(start_angle);
-        s(1,1) = y_start + 700*sin(start_angle);
-        s(2,0) = x_goal - 700*cos(goal_angle);
-        s(2,1) = y_goal - 700*sin(goal_angle);
-        s(3,0) = x_goal;
-        s(3,1) = y_goal;
+        s.row(0) << x_start, y_start;
+        s.row(1) << (x_start + 700*cos(start_angle)), (y_start + 700*sin(start_angle));
+        s.row(2) << (x_goal - 700*cos(goal_angle)), (y_goal - 700*sin(goal_angle));
+        s.row(3) << x_goal, y_goal;
 
         Eigen::RowVectorXf distance_vec(size);
-        Eigen::VectorXf v(4);
-        for(float u = 0.f; u <=(1.f); u = u + 1.f/size){
+        for(float u = 1.f/size; u <=(1.f-1.f/size); u = u + 1.f/size){
 
-            float l1 = pow((u-1.f),(3));
+            float l1 = pow((1.f-u),(3));
             float l2 = 3*pow((1.f-u),(2))*(u);
             float l3 = 3*(1.f-u)*pow((u),(2));
             float l4 = pow((u),(3));
@@ -39,6 +34,10 @@ public:
             l.row(r) << l1, l2, l3, l4;
 
         }
+        l.row(0) << 1, 0, 0, 0;
+        l.row(size-1) << 0, 0, 0, 1;
+        //std::cout << l << std::endl;
+        //std::cout << s << std::endl;
 
         P = l * s;
 
@@ -49,23 +48,17 @@ public:
     Eigen::MatrixXf update_P(int size=20)
     {
         int r = 0;
-        Eigen::MatrixXf P(size,2);
         Eigen::MatrixXf l(size,4);
         Eigen::MatrixXf s(4,2);
-        s(0,0) = x_start;
-        s(0,1) = y_start;
-        s(1,0) = x_start + 700*cos(start_angle);
-        s(1,1) = y_start + 700*sin(start_angle);
-        s(2,0) = x_goal - 700*cos(goal_angle);
-        s(2,1) = y_goal - 700*sin(goal_angle);
-        s(3,0) = x_goal;
-        s(3,1) = y_goal;
+        s.row(0) << x_start, y_start;
+        s.row(1) << (x_start + 700*cos(start_angle)), (y_start + 700*sin(start_angle));
+        s.row(2) << (x_goal - 700*cos(goal_angle)), (y_goal - 700*sin(goal_angle));
+        s.row(3) << x_goal, y_goal;
 
         Eigen::RowVectorXf distance_vec(size);
-        Eigen::VectorXf v(4);
-        for(float u = 0.f; u <=(1.f); u = u + 1.f/size){
+        for(float u = 1.f/size; u <=(1.f-1.f/size); u = u + 1.f/size){
 
-            float l1 = pow((u-1.f),(3));
+            float l1 = pow((1.f-u),(3));
             float l2 = 3*pow((1.f-u),(2))*(u);
             float l3 = 3*(1.f-u)*pow((u),(2));
             float l4 = pow((u),(3));
@@ -75,6 +68,10 @@ public:
             l.row(r) << l1, l2, l3, l4;
 
         }
+        l.row(0) << 1, 0, 0, 0;
+        l.row(size-1) << 0, 0, 0, 1;
+        //std::cout << l << std::endl;
+        //std::cout << s << std::endl;
 
         P = l * s;
 
