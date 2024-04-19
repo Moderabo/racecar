@@ -15,3 +15,5 @@ main.o: main.cc
 clean:
 	@ \rm -rf *.o *.out
 
+ekf: 
+	g++ EKF/test.cc EKF/EKFslam.cc -IEKF -Ilidar_lib -o testEKF.out

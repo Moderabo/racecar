@@ -5,20 +5,20 @@ from evdev import InputDevice, categorize, ecodes                   # pip instal
 gamepad = InputDevice('/dev/input/event13')      # "cd /dev/input" then "ls -al" to see your connections
 
 button_presses = {                          # ecodes.EV_KEY
-    #304: 'square',
+    304: 'square',
     305: 'x',
-    #306: 'circle',
-    #307: 'triangle',
-    #308: 'L1',
-    #309: 'R1',
-    #310: 'L2',                              # this shows up when the button clicks before the analog signals are reported
-    #311: 'R2',
-    #312: 'share',                           # 3 vertical lines, top left side of touchpad
-    #313: 'pause',                           # 3 horizontal lines, top right of touchpad
-    #314: 'L3',                              # left joystick press down vertically
-    #315: 'R3',
-    #316: 'playstation',
-    #317: 'touchpad'
+    306: 'circle',
+    307: 'triangle',
+    308: 'L1',
+    309: 'R1',
+    310: 'L2',                              # this shows up when the button clicks before the analog signals are reported
+    311: 'R2',
+    312: 'share',                           # 3 vertical lines, top left side of touchpad
+    313: 'pause',                           # 3 horizontal lines, top right of touchpad
+    314: 'L3',                              # left joystick press down vertically
+    315: 'R3',
+    316: 'playstation',
+    317: 'touchpad'
 }
 
 button_values = {                           # ecodes.EV_KEY button press values
@@ -28,13 +28,13 @@ button_values = {                           # ecodes.EV_KEY button press values
 
 absolutes = {                               # ecodes.EV_ABS
     0: 'left joystick left/right',          # 0 = left, 255 = right
-    #1: 'left joystick up/down',             # 0 = up, 255 = down
-    #2: 'L2 trigger',         # 0 = left, 255 = right
-    #3: 'L2 analog',                         # 0 = no press, 255 = full press
-    #4: 'R2 analog',                         # 0 = no press, 255 = full press
-    #5: 'R2 trigger',            # 0 = up, 255 = down
-    #16: 'leftpad left/right',               # -1 = left, 0 = stop pressing, 1 = right
-    #17: 'leftpad up/down',                  # -1 = up, 0 = stop pressing, 1 = down
+    1: 'left joystick up/down',             # 0 = up, 255 = down
+    2: 'L2 trigger',         # 0 = left, 255 = right
+    3: 'L2 analog',                         # 0 = no press, 255 = full press
+    4: 'R2 analog',                         # 0 = no press, 255 = full press
+    5: 'R2 trigger',            # 0 = up, 255 = down
+    16: 'leftpad left/right',               # -1 = left, 0 = stop pressing, 1 = right
+    17: 'leftpad up/down',                  # -1 = up, 0 = stop pressing, 1 = down
 }
 
 leftpad_left_right_values = {
