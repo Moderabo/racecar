@@ -131,7 +131,6 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 			StateCovariance(StateCovariance.rows() - 2, StateCovariance.cols() - 2) = 1e100;
 			StateCovariance(StateCovariance.rows() - 1, StateCovariance.cols() - 1) = 1e100;
 
-			std::cout << StateCovariance << std::endl;
 
 			// the number of the observation should new last land mark
 			j = State.rows() - 2;
@@ -149,13 +148,11 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 		// do some stupid stuff i guess
 
 		// distance between car and object
-		std::cout << "1:a" << std::endl;
 		Eigen::Vector2d delta;
 		delta << State(association[obs_nr]) - State(0), 
 				 State(association[obs_nr]+1) - State(1);
 		float q = pow(delta(0),2)+ pow(delta(1),2);
 
-		std::cout << "2:a" << std::endl;
 		// the observation i guess
 		Eigen::Vector2d z;
 		z<< pow(pow(observation.x,2)+pow(observation.y,2),0.5f), atan2(observation.y,observation.x);
@@ -180,13 +177,7 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 
 		MatrixXd K(State.rows(),2);
 
-		std::cout << "3:e" << std::endl;
-
-		std::cout << "Kovvarians: " << StateCovariance.rows() << ' ' << StateCovariance.cols() << '\n'
-				  << "H: " << H.rows() << ' ' << H.cols() << '\n'
-				  << "Q: " << Qt.rows() << ' ' << H.cols() << std::endl;
 		K = StateCovariance * H.transpose()*(H*StateCovariance * H.transpose() + Qt).inverse();
-		std::cout << "4:e" << std::endl;
 		State = State + K*(z - z_hat);
 
 		MatrixXd I(StateCovariance.rows(),StateCovariance.rows());
@@ -196,8 +187,6 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 		obs_nr ++;
 	}
 
-	
-	std::cout << "3:e\n";
     return 0;
 }
 

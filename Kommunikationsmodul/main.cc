@@ -165,7 +165,10 @@ int main(int argc, const char * argv[])
 
 	    std::vector<Cone> cones {lidar.getCones()};
 	    //saveCones(cones);
+        std::cout << "Beginning SLAM:\n"
+        std::cout << "............................\n"
         slam.correct(cones);
+        std::cout << "SLAM done!\n"
         std::vector<Gate> gates;
         gates = findGates(cones);
 
