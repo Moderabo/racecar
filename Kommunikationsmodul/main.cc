@@ -4,6 +4,7 @@
  */
 
 #include "I2C_Connection.h"
+#include "EKFslam.h"
 #include "MQTT_Connection.h"
 #include "Lidar.h"
 
@@ -151,17 +152,20 @@ int main(int argc, const char * argv[])
     // Initiate LiDAR
     Lidar lidar {};
 
+    // create an ekf-slam object
+    EKFslam slam;
+
     // fetch result and print it out, do it 10 times
-    for(int i = 0; i < 1000; ++i)
+    for(int i = 0; i < 10000; ++i)
     {
         lidar.update();
 
         std::vector<Cluster> clusters {lidar.getPoints()};
     	//saveClusters(clusters);
 
-	std::vector<Cone> cones {lidar.getCones()};
-	//saveCones(cones);
-
+	    std::vector<Cone> cones {lidar.getCones()};
+	    //saveCones(cones);
+        slam.correct(cones);
         std::vector<Gate> gates;
         gates = findGates(cones);
 

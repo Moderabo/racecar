@@ -28,6 +28,8 @@ class EKFslamObj
     // Return the current state
     VectorXd getState();
 
+    std::vector<Cone> getCones();
+
     // Return the position of the veichle
     Eigen::Vector3d getPosition();
 

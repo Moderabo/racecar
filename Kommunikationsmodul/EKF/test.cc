@@ -13,6 +13,10 @@ int main()
   std::cout << slam.getPosition() << '\n';
   slam.predict(1,0,1);
   std::cout << slam.getPosition() << '\n';
+  std::vector<Cone> observationer;
+  Cone kon{1.f,1.f,10.f};
+  observationer.push_back(kon);
+  slam.correct(observationer);
 	
   std::cout << '\n' << slam.StateCovariance << '\n';
 
