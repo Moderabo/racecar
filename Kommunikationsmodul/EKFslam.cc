@@ -105,6 +105,7 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 			float dist = pow(pow(x-State(i),2)+pow(y-State(i+1),2),0.5f);
 
 			// if better than previous
+			std::cout << "Measured distance: " << dist << std::endl;
 			if (dist <= min_distance)
 			{
 				std::cout << "new better distance" << std::endl;
