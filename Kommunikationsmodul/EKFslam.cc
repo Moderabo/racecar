@@ -99,16 +99,15 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 
 		// loop over all the previously know landmarks and associate an object to a know landmark
 
-		for (int i = 3; i > State.rows() ;i+=2)
+		for (int i = 3; i < State.rows() ;i+=2)
 		{
+			std::cout << "loopa loopade har loopat" << std::endl;
 			// calculate the distance to the gate
 			float dist = pow(pow(x-State(i),2)+pow(y-State(i+1),2),0.5f);
-
+			std::cout << x << ' ' << y << ' ' << State(i) << ' ' << State(i+1) << ' ' << dist << std::endl;
 			// if better than previous
-			std::cout << "Measured distance: " << dist << std::endl;
 			if (dist <= min_distance)
 			{
-				std::cout << "new better distance" << std::endl;
 				// new minimum distance
 				min_distance = dist;
 
