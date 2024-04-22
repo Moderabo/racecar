@@ -153,7 +153,7 @@ int main(int argc, const char * argv[])
     Lidar lidar {};
 
     // create an ekf-slam object
-    EKFslam slam;
+    EKFslamObj slam;
 
     // fetch result and print it out, do it 10 times
     for(int i = 0; i < 10000; ++i)
