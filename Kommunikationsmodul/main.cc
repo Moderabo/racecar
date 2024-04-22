@@ -192,7 +192,7 @@ int main(int argc, const char * argv[])
 
 	mqtt_connection.pubCones(cones);
 
-	std::vector<float> commands_value_list;
+	/*std::vector<float> commands_value_list;
 
 	commands_value_list = mqtt_connection.receiveMsg();
 
@@ -213,7 +213,7 @@ int main(int argc, const char * argv[])
 	sleep(0.1);
 	i2c_connection.gas(commands_value_list[1]);
 	sleep(0.01);
-
+ 	*/
 
 
 
