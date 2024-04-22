@@ -107,6 +107,7 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 			// if better than previous
 			if (dist <= min_distance)
 			{
+				std::cout << "new better distance" << std::endl;
 				// new minimum distance
 				min_distance = dist;
 
