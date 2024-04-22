@@ -102,7 +102,7 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 		for (int i = 3; i > State.rows() ;i+=2)
 		{
 			// calculate the distance to the gate
-			float dist = pow(pow(x+State(i),2)+pow(y+State(i+1),2),0.5f);
+			float dist = pow(pow(x-State(i),2)+pow(y-State(i+1),2),0.5f);
 
 			// if better than previous
 			if (dist <= min_distance)
@@ -118,6 +118,7 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 		// if the closest know landmark isn't within 200mm we have a new landmark
 		if (min_distance > 200.f)
 		{
+			std::cout << "New Landmark: " << min_distance << std::endl;
 
 			// increase the size of the size state representation
 			State.conservativeResize(State.rows() + 2);
