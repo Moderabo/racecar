@@ -69,7 +69,7 @@ class Calc_ref{
         refrence_angle = 0.4 * angle_to_goal + 0.1 * CTS + car_angle;
         std::cout << refrence_angle << std::endl;
         //fix some max angle like abs && angle < pi/4 or angle > -pi/4
-
+        /*
         if (refrence_angle > M_1_PI/4.0){ //check max steering angle
             return M_1_PI/4.0;
         }else if (refrence_angle < -M_1_PI/4.0)
@@ -78,7 +78,8 @@ class Calc_ref{
         }else{
             return refrence_angle;
         }
-        
+        */
+        return refrence_angle;
     }
 
     float angle(float y, float x){

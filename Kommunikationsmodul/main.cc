@@ -112,7 +112,25 @@ AltGate convertGate(Gate &gate)
 
     alt_gate.x = (x1 + x0) / 2;
     alt_gate.y = (y1 + y0) / 2;
-    alt_gate.angle = acos( (x1-x0)/ sqrt((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)) );
+    //alt_gate.angle = acos( abs(y1-y0) / sqrt( (x1-x0)*(x1-x0)+(y1-y0)*(y1-y0) ) );
+    float theta = atan2f(y1-y0,x1-x0);
+
+    if ( theta < -M_PI / 2 )
+    {
+        alt_gate.angle = M_PI / 2 + theta;
+    }
+    else if ( theta < 0 )
+    {
+        alt_gate.angle = M_PI / 2 + theta;
+    }
+    else if ( theta < M_PI / 2 )
+    {
+        alt_gate.angle = -M_PI / 2 + theta;
+    }
+    else 
+    {
+        alt_gate.angle = -M_PI / 2 + theta;
+    }
     
     return alt_gate;
 }
@@ -210,12 +228,18 @@ int main(int argc, const char * argv[])
         AltGate prev_gate { convertGate(prev_next_gate.first) };
         AltGate next_gate { convertGate(prev_next_gate.second) };
         
+        std::cout << "Previous gate: " << prev_gate.x << ", "
+                                       << prev_gate.y << ", "
+                                       << prev_gate.angle << '\n';
+        std::cout << "Next gate: " << next_gate.x << ", "
+                                   << next_gate.y << ", "
+                                   << next_gate.angle << '\n';
+
         Planner bezier {prev_gate.x, prev_gate.y, prev_gate.angle,
                         next_gate.x, next_gate.y ,next_gate.angle};
 
-        float angle = bezier.getRefAngle(0, 0, 0);
+        float angle_to_steer = bezier.getRefAngle(0, 0, 0);
         
-        float angle_to_steer = angle;
         std::cout << "trying angle: " << angle_to_steer << std::endl;
 	
     	angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
@@ -230,7 +254,6 @@ int main(int argc, const char * argv[])
         }
 
     }
-
     return 0;
 }
 
