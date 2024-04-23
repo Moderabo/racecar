@@ -68,11 +68,27 @@ class Calc_ref{
         return atan2f(y,x);
     }
 
+    float get_refrence_angle()
+    {
+        return refrence_angle;
+    }
+
+    float get_XTE()
+    {
+        return XTE;
+    }
+
+    float get_CTS()
+    {
+        return CTS;
+    }
+
     private:
      
     float XTE;
     float CTS;
     float refrence_angle;
+    float angle_to_goal;
 
     //Waypoints
     Eigen::MatrixXf P;
