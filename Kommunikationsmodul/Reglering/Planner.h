@@ -9,7 +9,7 @@ public:
     Planner(float x_start, float y_start, float start_angle,
             float x_goal, float y_goal, float goal_angle,
             int size=20)
-    : x_start{x_start}, y_start{y_start}, start_angle{start_angle},
+    :x_start{x_start}, y_start{y_start}, start_angle{start_angle},
       x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
       size {size}, P {size,2}
     {
@@ -36,8 +36,6 @@ public:
         }
         l.row(0) << 1, 0, 0, 0;
         l.row(size-1) << 0, 0, 0, 1;
-        //std::cout << l << std::endl;
-        //std::cout << s << std::endl;
 
         P = l * s;
 
@@ -70,8 +68,6 @@ public:
         }
         l.row(0) << 1, 0, 0, 0;
         l.row(size-1) << 0, 0, 0, 1;
-        //std::cout << l << std::endl;
-        //std::cout << s << std::endl;
 
         P = l * s;
 
