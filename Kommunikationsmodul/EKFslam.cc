@@ -7,7 +7,7 @@ EKFslamObj::EKFslamObj()
     State = VectorXd(3);
     StateCovariance = MatrixXd(3,3);
     
-    State << 0.f, 0.f, 0.f;
+    State << 1.f, 1.f, 0.f;
 
     StateCovariance << 1.f, 0.f, 0.f,
                         0.f, 1.f, 0.f,
