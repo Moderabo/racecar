@@ -4,8 +4,8 @@
 EKFslamObj::EKFslamObj()
    : carLength {420.f}
 {
-    State = VectorXd(3);
-    StateCovariance = MatrixXd(3,3);
+    State = VectorXf(3);
+    StateCovariance = MatrixXf(3,3);
     
     State << 1.f, 1.f, 0.f;
 
@@ -34,13 +34,13 @@ int EKFslamObj::predict(float TimeStep, float Steer, float Gas)
 
 // New test predict
 // Initiate Fx matrix
-	MatrixXd Fx(3,State.rows());
+	MatrixXf Fx(3,State.rows());
 	Fx(0,0) = 1;
 	Fx(1,1) = 1;
 	Fx(2,2) = 1;
 
 	// Update state vector
-	Eigen::Vector3d poseUpdate {{Gas * cos(Steer + theta),
+	Eigen::Vector3f poseUpdate {{Gas * cos(Steer + theta),
 						 Gas * sin(Steer + theta),
 						 Gas * sin(Steer) / carLength}};
 
@@ -49,18 +49,18 @@ int EKFslamObj::predict(float TimeStep, float Steer, float Gas)
     std::cout << "State\t" << State(0) << "\t" << State(1) << std::endl;
 
     // Update the covvariance matrix
-	MatrixXd I(StateCovariance.rows(), StateCovariance.cols());
+	MatrixXf I(StateCovariance.rows(), StateCovariance.cols());
 	I.setIdentity();
 
-	MatrixXd jacob(3,3);
+	MatrixXf jacob(3,3);
 	jacob << 0.f, 0.f, - Gas * sin(Steer + theta) * TimeStep,
 		     0.f, 0.f, Gas * cos(Steer + theta) * TimeStep,
 			 0.f, 0.f, 0.f;
-	MatrixXd Gt(I.rows(), I.cols());
+	MatrixXf Gt(I.rows(), I.cols());
 	Gt = I + Fx.transpose() * jacob * Fx;
 
 	// Covariance matrix R, choose probability of being correct
-	MatrixXd R(3,3);
+	MatrixXf R(3,3);
 	R << 10, 0, 0,
 		 0, 10, 0,
 		 0, 0, 10;
@@ -76,7 +76,7 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 {
 	float theta = State(2);
 
-	MatrixXd Qt(2,2);
+	MatrixXf Qt(2,2);
 	Qt << 10, 0,
 		  0, 10;
 
@@ -88,8 +88,8 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 	// Associate every observation with a known landmark
 	// loop over all the given observations and give them a number that know landmark
 
-    Eigen::VectorXd tempState = State;
-    Eigen::MatrixXd tempStateCovariance = StateCovariance;
+    Eigen::VectorXf tempState = State;
+    Eigen::MatrixXf tempStateCovariance = StateCovariance;
 
 
 	for (auto observation : observations)
@@ -154,44 +154,42 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 		// do some stupid stuff i guess
 
 		// distance between car and object
-		Eigen::Vector2d delta;
+		Eigen::Vector2f delta;
 		delta << State(association[obs_nr]) - State(0), 
 				 State(association[obs_nr]+1) - State(1);
-		float q = pow(delta(0),2)+ pow(delta(1),2);
+		float q = pow(delta.coeff(0),2)+ pow(delta.coeff(1),2);
 
 		// the observation i guess
-		Eigen::Vector2d z;
+		Eigen::Vector2f z;
 		z<< pow(pow(observation.x,2)+pow(observation.y,2),0.5f), atan2(observation.y,observation.x);
 
-		Eigen::Vector2d z_hat;
-		z_hat<< pow(q,0.5f), atan2(delta(1),delta(0))- State(2);
+		Eigen::Vector2f z_hat;
+		z_hat<< pow(q,0.5f), atan2(delta.coeff(1),delta.coeff(0))- State(2);
 
 		// 5xN matrix with zeros
-		MatrixXd F(5,State.rows());
-		F.setZero();
-		F(0,0) = 1.f;
-		F(1,1) = 1.f;
-		F(2,2) = 1.f;
-		F(3,association[obs_nr]) = 1.f;
-		F(4,association[obs_nr]+1) = 1.f;
+		MatrixXf F(5,State.rows());
+		F << MatrixXf::Identity(3,3), MatrixXf::Zero(3,State.rows()-3),
+		MatrixXf::Zero(2,State.rows());
 
-		MatrixXd H(2,5);
+		F.block(3,association[obs_nr],4,association[obs_nr]+1) << 1,0,0,1;
 
-		H << -pow(q,0.5f)*delta(0), -pow(q,0.5f)*delta(1), 0, pow(q,0.5f)*delta(0), pow(q,0.5f)*delta(1),
-			 delta(1), -delta(0), -q, -delta(1), delta(0);
+		MatrixXf H(2,5);
 
-		H = 1/q * H * F;
+		H << -pow(q,0.5f)*delta.coeff(0), -pow(q,0.5f)*delta.coeff(1), 0, pow(q,0.5f)*delta.coeff(0), pow(q,0.5f)*delta.coeff(1),
+			 delta.coeff(1), -delta.coeff(0), -q, -delta.coeff(1), delta.coeff(0);
 
-		MatrixXd K(State.rows(),2);
-        MatrixXd Itwo(2,2);
+		H = (1/q) * H * F;
+
+		MatrixXf K(State.rows(),2);
+        MatrixXf Itwo(2,2);
         Itwo.setIdentity();
-        MatrixXd inv(2, 2);
+        MatrixXf inv(2, 2);
         inv = (H*StateCovariance * H.transpose() + Qt).householderQr().solve(Itwo);
 		//K = StateCovariance * H.transpose()*(H*StateCovariance * H.transpose() + Qt).inverse();
         K = StateCovariance * H.transpose()*inv;
 		State = State + K*(z - z_hat);
 
-		MatrixXd I(StateCovariance.rows(),StateCovariance.rows());
+		MatrixXf I(StateCovariance.rows(),StateCovariance.rows());
 		I.setIdentity();
 		StateCovariance = (I - K*H)*StateCovariance;
 
@@ -202,14 +200,14 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 }
 
 // Get the state vector
-VectorXd EKFslamObj::getState()
+VectorXf EKFslamObj::getState()
 {
     // Return the entire state vector
     return State;
 }
 
 // Get the position of car
-Eigen::Vector3d EKFslamObj::getPosition()
+Eigen::Vector3f EKFslamObj::getPosition()
 {
     // Return the top three elements of the state vector, i.e. the position of the car
     return State.block(0,0,3,1);

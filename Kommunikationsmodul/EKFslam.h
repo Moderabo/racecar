@@ -6,8 +6,8 @@
 
 #include "Lidar.h"
 
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
+using Eigen::MatrixXf;
+using Eigen::VectorXf;
 
 //  A class that defines the entier slam instace
 class EKFslamObj
@@ -26,18 +26,18 @@ class EKFslamObj
     int correct(std::vector<Cone> &observations);
 
     // Return the current state
-    VectorXd getState();
+    VectorXf getState();
 
     std::vector<Cone> getCones();
 
     // Return the position of the veichle
-    Eigen::Vector3d getPosition();
+    Eigen::Vector3f getPosition();
 
     // The vector containing the position of the current state
-    VectorXd State;
+    VectorXf State;
 
     // The matrix containing the covvariance for all the objects
-    MatrixXd StateCovariance;
+    MatrixXf StateCovariance;
 
     // The lenght of the car in mm (420 from vanheden)
     float carLength;
