@@ -10,10 +10,10 @@
 
 //#define PORT_DEBUG
 
-volatile uint8_t left_counter = 0;
-volatile uint8_t right_counter = 0;
-
-volatile uint8_t i2c_byte_cnt = 0;  // Tell which byte in sequence
+volatile uint16_t left_counter = 0;
+volatile uint16_t right_counter = 0;
+volatile uint16_t speed = 0;
+volatile uint16_t speed_buffer = 0;
 
 const int ADDR = 34;
 
@@ -41,6 +41,16 @@ void sensor_init()
 }
 
 
+void timer_init()
+{
+	TCCR1A = (1<<COM1A0)|(0<<WGM10);			// Normal counter mode
+	TCCR1B = (1<<WGM12)|(5<<CS10);	// Normal counter mode
+	TIMSK1 = (1<<OCIE1A);			// Interrupt on TCTN1 = OCR1A
+	
+	OCR1A = 1600;						// Sample time
+}
+
+
 int main(void)
 {
     cli();
@@ -51,13 +61,15 @@ int main(void)
 	i2c_init();
 	
 	sensor_init();
+
+	timer_init();
 	
 	sei();
 	
     while (1) 
-    {
-    }
+    {}
 }
+
 
 ISR(INT0_vect)  // LEFT
 {
@@ -67,6 +79,7 @@ ISR(INT0_vect)  // LEFT
 #endif
 }
 
+
 ISR(INT1_vect)  // RIGHT
 {
 	right_counter++;
@@ -75,6 +88,15 @@ ISR(INT1_vect)  // RIGHT
 #endif
 }
 
+
+ISR(TIMER1_COMPA_vect)
+{
+	speed = (left_counter+right_counter) * 63;  // Pre calculated for mm/s
+	left_counter = 0;
+	right_counter = 0;
+}
+
+
 ISR(TWI_vect)
 {
 	uint8_t TW_STATUS = TWSR & 0xf8;  // Extract I2C status
@@ -82,11 +104,12 @@ ISR(TWI_vect)
 	switch(TW_STATUS)
 	{
 		case TW_ST_SLA_ACK:
-			TWDR = left_counter;
-			TWCR = (1<<TWIE)|(1<<TWINT)|(1<<TWEA)|(1<<TWEN);  // Send another byte
+			speed_buffer = speed;
+			TWDR = speed_buffer % 0x100;
+			TWCR = (1<<TWIE)|(1<<TWINT)|(1<<TWEA)|(1<<TWEN);  // Send last byte
 			break;
 		case TW_ST_DATA_ACK:
-			TWDR = right_counter;
+			TWDR = speed_buffer / 0x100;
 			TWCR = (1<<TWIE)|(1<<TWINT)|(0<<TWEA)|(1<<TWEN);  // Send last byte
 			break;
 		case TW_ST_STOP:
