@@ -91,6 +91,9 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 		// calculate where the object is in the static coordinate plane
 		float x = cos(theta) * observation.x - cos(M_PI/2 - theta) * observation.y + State(0);
 		float y = cos(theta) * observation.x + sin(M_PI/2 - theta) * observation.y + State(1);
+		std::cout << "x: " << x << "\ty: " << y << "\tobs x: " << observation.x << "\tobs y: " 
+				  << observation.y << "\ttheta: " << theta << "\tstate 0: " 
+				  << State(0) << "\tstate 1: " << State(1) <<std::endl;
 		
 		// the previous minimum distace
 		float min_distance = 1e10;
