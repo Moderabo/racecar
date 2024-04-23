@@ -81,10 +81,10 @@ public:
     std::string getBezier_points()
     {
         std::ostringstream ss;
-        ss << s.coeff(0,0) << "," << s.coeff(0,1) << ";"
-            << s.coeff(1,0) << "," << s.coeff(1,1) << ";"
-            << s.coeff(2,0) << "," << s.coeff(2,1) << ";"
-            << s.coeff(3,0) << "," << s.coeff(3,1) << ";";
+        for(int i;i<=3; i++)
+        {
+            ss << s.coeff(i,0) << "," << s.coeff(i,1) << ";";
+        }
 
         return ss;
     }
@@ -92,27 +92,11 @@ public:
     std::string getBezier_curve()
     {
         std::ostringstream ss;
-        ss << P.coeff(0,0) << "," << P.coeff(0,1) << ";"
-            << P.coeff(1,0) << "," << P.coeff(1,1) << ";"
-            << P.coeff(2,0) << "," << P.coeff(2,1) << ";"
-            << P.coeff(3,0) << "," << P.coeff(3,1) << ";"
-            << P.coeff(4,0) << "," << P.coeff(4,1) << ";"
-            << P.coeff(5,0) << "," << P.coeff(5,1) << ";"
-            << P.coeff(6,0) << "," << P.coeff(6,1) << ";"
-            << P.coeff(7,0) << "," << P.coeff(7,1) << ";"
-            << P.coeff(8,0) << "," << P.coeff(8,1) << ";"
-            << P.coeff(9,0) << "," << P.coeff(9,1) << ";"
-            << P.coeff(10,0) << "," << P.coeff(10,1) << ";"
-            << P.coeff(11,0) << "," << P.coeff(11,1) << ";"
-            << P.coeff(12,0) << "," << P.coeff(12,1) << ";"
-            << P.coeff(13,0) << "," << P.coeff(13,1) << ";"
-            << P.coeff(14,0) << "," << P.coeff(14,1) << ";"
-            << P.coeff(15,0) << "," << P.coeff(15,1) << ";"
-            << P.coeff(16,0) << "," << P.coeff(16,1) << ";"
-            << P.coeff(17,0) << "," << P.coeff(17,1) << ";"
-            << P.coeff(18,0) << "," << P.coeff(18,1) << ";"
-            << P.coeff(19,0) << "," << P.coeff(19,1) << ";";
-
+        for(int i;i<=19; i++)
+        {
+             ss << s.coeff(i,0) << "," << s.coeff(i,1) << ";";
+        }
+        
         return ss;
 
     }

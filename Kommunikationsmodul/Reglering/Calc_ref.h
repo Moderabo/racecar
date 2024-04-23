@@ -47,7 +47,7 @@ class Calc_ref{
             cords2 = cords2 * rot_M; //1x2 matrix
             angle_from_tangent = angle(cords2.coeff(0,1),cords2.coeff(0,0));
 
-        }else if (index + size/5 >= size)
+        }else if (index + size/5 >= size) //If car are close to the goal set new goal point further away.
         {
             Eigen::MatrixXf cords1(1,2);
             cords1.row(0) << (x_goal + 500*cos(goal_angle) - car_x), (x_goal + 500*sin(goal_angle) - car_y);
