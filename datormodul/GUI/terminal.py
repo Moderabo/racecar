@@ -62,6 +62,7 @@ class Terminal(tk.Frame):
             terminal.config(state="normal")
             terminal.insert("end", "\n" + command)
             terminal.config(state="disabled")
+            terminal.see("end")
             try:
                 self.parent.setup_mqtt_protocol()
             except:

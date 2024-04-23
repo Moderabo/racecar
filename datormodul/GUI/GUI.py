@@ -9,6 +9,7 @@ import rorry
 import xbox
 import read_keyboard
 import paho.mqtt.client as client
+import information
 
 def clamp(minimum, x, maximum):
     return max(minimum, min(x, maximum))
@@ -135,7 +136,7 @@ class GUI(tk.Tk):
         elif self.steering_mode == "stop":
             self.mqtt_client.loop_stop()
             
-
+        #print(len(information.cones))
         self.after(10, self.steering)
         return
 
