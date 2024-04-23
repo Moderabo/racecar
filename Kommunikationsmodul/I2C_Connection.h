@@ -57,11 +57,11 @@ public:
     }
 
 
-    int get_speed()
+    int getSpeed()
     {
         int result;
 
-        result = wiringPiI2CRead(fd_SENSOR);
+        result = wiringPiI2CReadReg16(fd_SENSOR, 0x01);
         std::cout << "Speed: " << result << '\n';
         return result;
     }

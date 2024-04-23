@@ -7,7 +7,7 @@
 
 #include "I2C_Connection.h"
 #include "Lidar.h"
-#include "Planner.h"
+//#include "Planner.h"
 
 using namespace std;
 using namespace Eigen;
@@ -60,11 +60,11 @@ AltGate convertGate(Gate &gate)
     {
         alt_gate.angle = -M_PI / 2 + theta;
     }
-    else 
+    else
     {
         alt_gate.angle = -M_PI / 2 + theta;
     }
-    
+
     return alt_gate;
 }
 
@@ -217,8 +217,8 @@ int main(int argc, const char * argv[])
 
         //std::vector<Cluster> clusters {lidar.getPoints()};
     	//saveClusters(clusters);
-    
-	    std::vector<Cone> cones {lidar.getCones()};
+
+        std::vector<Cone> cones {lidar.getCones()};
 	    //saveCones(cones);
 
         std::vector<AltGate> gates;
@@ -245,15 +245,15 @@ int main(int argc, const char * argv[])
         */
         float angle_to_steer {3*atan2f(next_gate.y, next_gate.x)};
         std::cout << "trying angle: " << angle_to_steer << std::endl;
-	
+
     	angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
-    
+
         i2c_connection.steer(angle_to_steer);
     	sleep(0.1);
-    	i2c_connection.gas(0.11);
+    	i2c_connection.gas(0.1);
     	sleep(0.1);
-
-        if (ctrl_c_pressed){ 
+	int g = i2c_connection.getSpeed();
+        if (ctrl_c_pressed){
             break;
         }
     }
