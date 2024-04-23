@@ -3,7 +3,7 @@ CCFLAGS = -pthread -Ilidar_lib -IReglering
 
 LDFLAGS = -Llidar_lib -lsl_lidar_sdk -lwiringPi -lpaho-mqttpp3 -lpaho-mqtt3as
 
-main: main.o Lidar.o
+main: main.o Lidar.o MQTT_Connection.o
 	g++ $^ $(CCFLAGS) $(LDFLAGS) -o $@.out
 
 main.o: main.cc

@@ -5,11 +5,10 @@
 class Calc_ref{
     public:
     Calc_ref() = default;
-    Calc_ref(Eigen::MatrixXf P,
-     float x_goal, float y_goal, float goal_angle): 
-    P{P},x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, pid_c {0.5, {0.87154,6.84371,0,100,1,1}};
-    {
-    }
+    Calc_ref(Eigen::MatrixXf P, float x_goal, float y_goal, float goal_angle)
+    : P {P}, x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, pid_c {0.5, {0.87154,6.84371,0,100,1,1}}
+    {}
+
     virtual ~Calc_ref()
     {}
 
@@ -58,9 +57,9 @@ class Calc_ref{
         }
         CTS = angle_from_tangent;
 
-        refrence_angle = 0.4 * angle_to_goal + 0.1 * CTS + car_angle;
+        refrence_angle = 0.9 * angle_to_goal + 0.1 * CTS + car_angle;
 
-        return refrence_angle*pid_c.update(refrence_angle, car_angle)*9/(3.14); 
+        return refrence_angle*9/(3.14); 
         //returns something normally between pi/9 and if angle is bigger its capped later in main.
     }
 

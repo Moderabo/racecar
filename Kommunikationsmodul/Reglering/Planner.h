@@ -1,6 +1,8 @@
 #ifndef PLANNER_H_
 #define PLANNER_H_
 
+#include <memory>
+
 #include "Calc_ref.h"
 
 class Planner
@@ -9,9 +11,9 @@ public:
     Planner(float x_start, float y_start, float start_angle,
             float x_goal, float y_goal, float goal_angle,
             int size=20)
-    :x_start{x_start}, y_start{y_start}, start_angle{start_angle},
+    : x_start{x_start}, y_start{y_start}, start_angle{start_angle},
       x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
-      size {size}, P {size,2} s{4,2}
+      size {size}, P {size,2}, s {4,2}, calc_ref {}
     {
         //Matrix for calculations
         int r = 0; //index in loop
@@ -41,7 +43,8 @@ public:
 
         P = l * s; //Calculates the bezier curve
 
-        calc_ref = Calc_ref(P, x_goal, y_goal, goal_angle); //Is done when initalizing..
+        //Is done when initalizing..
+        calc_ref = std::make_unique<Calc_ref>(P, x_goal, y_goal, goal_angle);
     } 
     virtual ~Planner() 
     {}
@@ -78,29 +81,29 @@ public:
     }
     float getRefAngle(float car_x, float car_y, float car_angle)
     {
-        return calc_ref.update_ref(size, car_x, car_y, car_angle);
+        return calc_ref->update_ref(size, car_x, car_y, car_angle);
     }
 
     std::string getBezier_points()
     {
         std::ostringstream ss;
-        for(int i;i<=3; i++)
+        for(int i {0};i<=3; i++)
         {
             ss << s.coeff(i,0) << "," << s.coeff(i,1) << ";";
         }
 
-        return ss;
+        return ss.str();
     }
 
     std::string getBezier_curve()
     {
         std::ostringstream ss;
-        for(int i;i<=19; i++)
+        for(int i {0};i<=19; i++)
         {
-             ss << s.coeff(i,0) << "," << s.coeff(i,1) << ";";
+             ss << P.coeff(i,0) << "," << P.coeff(i,1) << ";";
         }
 
-        return ss;
+        return ss.str();
 
     }
 
@@ -113,9 +116,11 @@ private:
     float goal_angle;
     int size;
     Eigen::MatrixXf P;
-    Calc_ref calc_ref;
+    std::unique_ptr<Calc_ref> calc_ref;
+        //Calc_ref calc_ref_tmp {P, x_goal, y_goal, goal_angle};
+        //Calc_ref calc_ref_tmp {P, x_goal, y_goal, goal_angle};
 
-    Eigen::MatrixXf s(4,2);
+    Eigen::MatrixXf s;
 };
 
 #endif /* PLANNER_H_ */
