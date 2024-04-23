@@ -1,11 +1,12 @@
 import tkinter as tk
 import information
+import time
 
 class Terminal(tk.Frame):
 
     def __init__(self, parent):
         self.parent = parent
-        terminal = tk.Frame(parent, height=200, width=500, bg="gray", borderwidth=0, highlightthickness=0)
+        terminal = tk.Frame(parent, height=200, width=500, bg="gray", borderwidth=0, highlightthickness=0, name="terminal")
         terminal.place(x=0, y=400)
 
         text_area_terminal = tk.Text(terminal, font=("Times New Roman", 15), state="normal", borderwidth=0, highlightthickness=0)
@@ -13,11 +14,16 @@ class Terminal(tk.Frame):
         text_area_terminal.insert("insert", "\n\n\n\n\n")
         text_area_terminal.config(state="disabled")
         
-        input_area = tk.Entry(terminal, bg="gray", font=("Times New Roman", 15), borderwidth=0, highlightthickness=0)
+        input_area = tk.Entry(terminal, bg="gray", font=("Times New Roman", 15), borderwidth=0, highlightthickness=0, name="input")
         input_area.place(x=0, y=150, width=500, height=50)
         input_area.bind("<Return>", lambda event : self.command_input(input_area, text_area_terminal))
+        input_area.bind("<Key>", self.key_pressed)
 
-    def update():
+    def key_pressed(self, event):
+        if event.keysym == "Up":
+            print("Jaja")
+        elif event.keysym == "Down":
+            print("Nejnej")
         return
 
     def command_input(self, usr_input, terminal):
@@ -37,7 +43,7 @@ class Terminal(tk.Frame):
         elif command_list[0] == "stop":
             self.parent.change_driving_mode("stop")
         elif command_list[0] == "start":
-            self.parent.mqtt_client.loop_start()
+            self.parent.change_driving_mode("start")
         elif command_list[0] == "end":
             self.parent.is_in = False
         elif command_list[0] == "cone" and len(command_list) > 3:
@@ -47,8 +53,23 @@ class Terminal(tk.Frame):
             info_to_print = str(information.cones)
         elif command_list[0] == "rmvcone" and len(command_list) > 1:
             information.cones.pop(int(command_list[1]))
-        elif command_list[0] == "size" and len(command_list) > 1:
+        elif command_list[0] == "grid" and len(command_list) > 1:
             self.parent.path_widget.change_grid(int(command_list[1]))
+        elif command_list[0] == "zoom" and len(command_list) > 1:
+            self.parent.path_widget.change_zoom(float(command_list[1]))
+        elif command_list[0] == "setup":
+            usr_input.delete(0, "end")
+            terminal.config(state="normal")
+            terminal.insert("end", "\n" + command)
+            terminal.config(state="disabled")
+            try:
+                self.parent.setup_mqtt_protocol()
+            except:
+                terminal.config(state="normal")
+                terminal.insert("end", "\nCould not connect to car.")
+                terminal.config(state="disabled")
+                terminal.see("end")
+            return
         else:
             usr_input.delete(0, "end")
             terminal.config(state="normal")
