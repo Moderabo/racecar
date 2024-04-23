@@ -17,9 +17,6 @@ class GUI(tk.Tk):
 
     def __init__(self, title):
 
-        os.system(f'''cmd /c "netsh wlan connect name=CarGoBRR2"''')
-        time.sleep(5)
-
         #=====Set up main window=====
         width = 800
         height = 600
@@ -47,7 +44,6 @@ class GUI(tk.Tk):
         self.mqtt_client.on_unsubscribe = mqtt.on_unsubscribe
         self.mqtt_client.on_publish = mqtt.on_publish
         self.mqtt_client.user_data_set(self.unacked_publish)
-        self.mqtt_client.connect("10.42.0.1")
         #=============================
 
         try:
@@ -63,9 +59,19 @@ class GUI(tk.Tk):
 
         self.kbd = read_keyboard.Keyboard()
 
+        self.bind("<Button-1>", self.click_event)
+
     def __del__(self):
         os.system(f'''cmd /c "netsh wlan connect name=eduroam"''')
         return
+
+    def setup_mqtt_protocol(self):
+        os.system(f'''cmd /c "netsh wlan connect name=CarGoBRR2"''')
+        time.sleep(5)
+        self.mqtt_client.connect("10.42.0.1")
+
+    def click_event(self, event):
+        event.widget.focus_set()
 
     def change_driving_mode(self, mode):
         if self.steering_mode == "stop":
@@ -99,14 +105,14 @@ class GUI(tk.Tk):
 
             motor = clamp(-1.0, motor, 1.0)
 
-            print(str(servo_signal) + " "+ str(motor) + " " + "0")
+            # print(str(servo_signal) + " "+ str(motor) + " " + "0")
 
             msg_info = self.mqtt_client.publish("commands", str(servo_signal) + " "+ str(motor) + " " + "0", qos=1)
             self.unacked_publish.add(msg_info.mid)
 
             msg_info.wait_for_publish()
 
-        elif self.steering_mode == "wasd":
+        elif self.steering_mode == "wasd" and str(self.focus_get()) != ".terminal.input":
             servo_signal = 0
             motor = 0
             kbd_input = self.kbd.read()
@@ -119,7 +125,7 @@ class GUI(tk.Tk):
             elif kbd_input[3] == 1:
                 servo_signal = 1
             
-            #print(str(servo_signal) + " "+ str(motor) + " " + "0")
+            # print(str(servo_signal) + " "+ str(motor) + " " + "0")
 
             msg_info = self.mqtt_client.publish("commands", str(servo_signal) + " "+ str(motor) + " " + "0", qos=1)
             self.unacked_publish.add(msg_info.mid)
@@ -130,7 +136,7 @@ class GUI(tk.Tk):
             self.mqtt_client.loop_stop()
             
 
-        self.after(100, self.steering)
+        self.after(10, self.steering)
         return
 
 UI = GUI("CarGoBrr2")

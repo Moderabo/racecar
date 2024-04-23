@@ -22,9 +22,41 @@ def on_message(client, userdata, message):
     if message.topic == "commands":
         information.data_list.append(message.payload)
         information.data_list.pop(0)
+
     elif message.topic == "data":
         print(message.payload)
-    
+
+    elif message.topic == "cones":
+        information.cones.clear()
+        message.payload = message.payload.decode("utf-8").rstrip(";")
+        cones = message.payload.split(";")
+        for cone in cones:
+            cone_info_list = cone.split(",")
+            cone_tuple = (float(cone_info_list[1])/10,
+                          float(cone_info_list[0])/10,
+                          float(cone_info_list[2])/10)
+            information.cones.append(cone_tuple)
+
+    elif message.topic == "bezier/def":
+        information.bezier[0].clear()
+        message.payload = message.payload.decode("utf-8").rstrip(";")
+        def_points = message.payload.split(";")
+        for def_point in def_points:
+            def_point_info_list = def_point.split(",")
+            def_point_tuple = (float(def_point_info_list[0])/10,
+                               float(def_point_info_list[1])/10)
+            information.bezier[0].append(def_point_tuple)
+
+    elif message.topic == "bezier/waypoints":
+        information.bezier[1].clear()
+        message.payload = message.payload.decode("utf-8").rstrip(";")
+        def_waypoints = message.payload.split(";")
+        for def_waypoint in def_waypoints:
+            def_waypoint_info_list = def_waypoint.split(",")
+            def_waypoint_tuple = (float(def_waypoint_info_list[0])/10,
+                                  float(def_waypoint_info_list[0])/10)
+            information.bezier[1].append(def_waypoint_tuple)
+
     # We only want to process 10 messages
     if len(userdata) >= 10:
         #client.unsubscribe("hi")
@@ -36,7 +68,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
     else:
         # we should always subscribe from on_connect callback to be sure
         # our subscribed is persisted across reconnections.
-        client.subscribe([("commands",0), ("data", 0)])
+        client.subscribe([("commands",0), ("data", 0), ("cones", 0), ("bezier/def", 0), ("bezier/waypoint", 0)])
 
 def on_publish(client, userdata, mid, reason_code, properties):
     # reason_code and properties will only be present in MQTTv5. It's always unset in MQTTv3
