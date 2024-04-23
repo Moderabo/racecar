@@ -34,73 +34,6 @@ void ctrlc(int)
 }
 
 
-bool validGate(Cone &cone1, Cone &cone2)
-{
-    std::pair<float,float> gate_vect;
-    gate_vect.first = cone1.x - cone2.x;
-    gate_vect.second = cone1.y - cone2.y;
-
-    float gate_dist_squared {gate_vect.first*gate_vect.first + gate_vect.second*gate_vect.second};
-
-    if ( gate_dist_squared > 700*700)
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
-}
-
-
-std::vector<Gate> findGates(std::vector<Cone> &cones)
-{
-    std::vector<Gate> gates {};
-
-    for (auto cone1 = cones.begin(); cone1 != cones.end(); cone1++)
-    {
-        for (auto cone2 {cone1 + 1}; cone2 != cones.end(); cone2++)
-        {
-            if ( validGate(*cone1, *cone2) )
-            {
-                Gate gate {*cone1, *cone2};
-                gates.push_back(gate);
-            }
-        }
-    }
-
-    return gates;
-}
-
-
-std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
-{
-    std::pair<Gate,Gate> prev_next_gate {};
-
-    // Previous gate
-    for (auto &gate : gates)
-    {
-        if ( gate.first.x < 0 && gate.second.x < 0 )
-        {
-            prev_next_gate.first = gate;
-            break;
-        }
-    }
-    
-    // Next gate
-    for (auto &gate : gates)
-    {
-        if ( gate.first.x > 0 && gate.second.x > 0 )
-        {
-            prev_next_gate.second = gate;
-            break;
-        }
-    }
-    
-    return prev_next_gate;
-}
-
-
 AltGate convertGate(Gate &gate)
 {
     float x0 { gate.first.x };
@@ -133,6 +66,77 @@ AltGate convertGate(Gate &gate)
     }
     
     return alt_gate;
+}
+
+
+bool validGate(Cone &cone1, Cone &cone2)
+{
+    std::pair<float,float> gate_vect;
+    gate_vect.first = cone1.x - cone2.x;
+    gate_vect.second = cone1.y - cone2.y;
+
+    float gate_dist_squared {gate_vect.first*gate_vect.first + gate_vect.second*gate_vect.second};
+
+    if ( gate_dist_squared > 750*750)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+
+std::vector<AltGate> findGates(std::vector<Cone> &cones)
+{
+    std::vector<AltGate> gates {};
+
+    for (auto cone1 = cones.begin(); cone1 != cones.end(); cone1++)
+    {
+        for (auto cone2 {cone1 + 1}; cone2 != cones.end(); cone2++)
+        {
+            if ( validGate(*cone1, *cone2) )
+            {
+                Gate gate {*cone1, *cone2};
+                gates.push_back(convertGate(gate));
+            }
+        }
+    }
+
+    return gates;
+}
+
+
+std::pair<AltGate,AltGate> findPrevNextGate(std::vector<AltGate> &gates)
+{
+    std::pair<AltGate,AltGate> prev_next_gate {};
+    float closest_prev_gate { 1e30 };
+    float closest_next_gate { 1e30 };
+
+    for (auto &gate : gates)
+    {
+        // Previous gate
+        if ( gate.x < 0 )
+        {
+            if ( gate.x*gate.x + gate.y*gate.y < closest_prev_gate )
+            {
+                prev_next_gate.first = gate;
+                closest_prev_gate = gate.x*gate.x + gate.y*gate.y;
+            }
+        }
+        // Next gate
+        else if ( abs(atan2f(gate.y, gate.x)) < 60 )
+        {
+            if ( gate.x*gate.x + gate.y*gate.y < closest_next_gate )
+            {
+                prev_next_gate.second = gate;
+                closest_next_gate = gate.x*gate.x + gate.y*gate.y;
+            }
+        }
+    }
+    
+    return prev_next_gate;
 }
 
 
@@ -202,32 +206,31 @@ int main(int argc, const char * argv[])
 
 	// Setup I2C communication
 	I2CConnection i2c_connection {};
-
+    
     // Initiate LiDAR
     Lidar lidar {};
 
     // fetch result and print it out, do it 10 times
-    for(int i = 0; i < 1000; ++i)
+    for(int i = 0; i < 10000; ++i)
     {
         lidar.update();
 
-        std::vector<Cluster> clusters {lidar.getPoints()};
-    	saveClusters(clusters);
+        //std::vector<Cluster> clusters {lidar.getPoints()};
+    	//saveClusters(clusters);
     
 	    std::vector<Cone> cones {lidar.getCones()};
-	    saveCones(cones);
+	    //saveCones(cones);
 
-        std::vector<Gate> gates;
+        std::vector<AltGate> gates;
         gates = findGates(cones);
+        //saveGates(gates);
 
-        saveGates(gates);
-
-        std::pair<Gate,Gate> prev_next_gate;
+        std::pair<AltGate,AltGate> prev_next_gate;
         prev_next_gate = findPrevNextGate(gates);
 
-        AltGate prev_gate { convertGate(prev_next_gate.first) };
-        AltGate next_gate { convertGate(prev_next_gate.second) };
-        
+        AltGate prev_gate { prev_next_gate.first };
+        AltGate next_gate { prev_next_gate.second };
+        /*
         std::cout << "Previous gate: " << prev_gate.x << ", "
                                        << prev_gate.y << ", "
                                        << prev_gate.angle << '\n';
@@ -239,20 +242,20 @@ int main(int argc, const char * argv[])
                         next_gate.x, next_gate.y ,next_gate.angle};
 
         float angle_to_steer = bezier.getRefAngle(0, 0, 0);
-        
+        */
+        float angle_to_steer {3*atan2f(next_gate.y, next_gate.x)};
         std::cout << "trying angle: " << angle_to_steer << std::endl;
 	
     	angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
     
         i2c_connection.steer(angle_to_steer);
     	sleep(0.1);
-    	i2c_connection.gas(0.1);
+    	i2c_connection.gas(0.11);
     	sleep(0.1);
 
         if (ctrl_c_pressed){ 
             break;
         }
-
     }
     return 0;
 }
