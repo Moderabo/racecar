@@ -35,7 +35,7 @@ class EKFslamObj
 
     // The vector containing the position of the current state
     VectorXd State;
-    
+
     // The matrix containing the covvariance for all the objects
     MatrixXd StateCovariance;
 
