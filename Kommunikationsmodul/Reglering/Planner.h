@@ -47,7 +47,7 @@ public:
     {
         int r = 0;
         Eigen::MatrixXf l(size,4);
-        Eigen::MatrixXf s(4,2);
+        //Eigen::MatrixXf s(4,2);
         s.row(0) << x_start, y_start;
         s.row(1) << (x_start + 700*cos(start_angle)), (y_start + 700*sin(start_angle));
         s.row(2) << (x_goal - 700*cos(goal_angle)), (y_goal - 700*sin(goal_angle));
@@ -77,6 +77,46 @@ public:
     {
         return calc_ref.update_ref(size, car_x, car_y, car_angle);
     }
+
+    std::string getBezier_points()
+    {
+        std::ostringstream ss;
+        ss << s.coeff(0,0) << "," << s.coeff(0,1) << ";"
+            << s.coeff(1,0) << "," << s.coeff(1,1) << ";"
+            << s.coeff(2,0) << "," << s.coeff(2,1) << ";"
+            << s.coeff(3,0) << "," << s.coeff(3,1) << ";";
+
+        return ss;
+    }
+
+    std::string getBezier_curve()
+    {
+        std::ostringstream ss;
+        ss << P.coeff(0,0) << "," << P.coeff(0,1) << ";"
+            << P.coeff(1,0) << "," << P.coeff(1,1) << ";"
+            << P.coeff(2,0) << "," << P.coeff(2,1) << ";"
+            << P.coeff(3,0) << "," << P.coeff(3,1) << ";"
+            << P.coeff(4,0) << "," << P.coeff(4,1) << ";"
+            << P.coeff(5,0) << "," << P.coeff(5,1) << ";"
+            << P.coeff(6,0) << "," << P.coeff(6,1) << ";"
+            << P.coeff(7,0) << "," << P.coeff(7,1) << ";"
+            << P.coeff(8,0) << "," << P.coeff(8,1) << ";"
+            << P.coeff(9,0) << "," << P.coeff(9,1) << ";"
+            << P.coeff(10,0) << "," << P.coeff(10,1) << ";"
+            << P.coeff(11,0) << "," << P.coeff(11,1) << ";"
+            << P.coeff(12,0) << "," << P.coeff(12,1) << ";"
+            << P.coeff(13,0) << "," << P.coeff(13,1) << ";"
+            << P.coeff(14,0) << "," << P.coeff(14,1) << ";"
+            << P.coeff(15,0) << "," << P.coeff(15,1) << ";"
+            << P.coeff(16,0) << "," << P.coeff(16,1) << ";"
+            << P.coeff(17,0) << "," << P.coeff(17,1) << ";"
+            << P.coeff(18,0) << "," << P.coeff(18,1) << ";"
+            << P.coeff(19,0) << "," << P.coeff(19,1) << ";";
+
+        return ss;
+
+    }
+
 private:
     float x_start; 
     float y_start; 
@@ -87,6 +127,8 @@ private:
     int size;
     Eigen::MatrixXf P;
     Calc_ref calc_ref;
+
+    Eigen::MatrixXf s(4,2);
 };
 
 #endif /* PLANNER_H_ */

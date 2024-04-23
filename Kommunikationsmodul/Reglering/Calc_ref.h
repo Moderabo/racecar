@@ -28,7 +28,6 @@ class Calc_ref{
 
         Eigen::Index index;
         float XTE = d_vec.minCoeff(&index); //minimum distance to ref line, could be optimiced..
-        std::cout << index << std::endl;
 
         Eigen::MatrixXf rot_M(2,2); //inverse of a rotation matrix in cars angle. 
         //Make it independent on cordinate system.
@@ -41,7 +40,6 @@ class Calc_ref{
             cords1.row(0) << (P.coeff(index + size/10,0) - car_x), (P.coeff(index + size/10,1) - car_y);
             cords1 = cords1 * rot_M; //1x2 matrix
             angle_to_goal = angle(cords1.coeff(0,1),cords1.coeff(0,0));
-            std::cout << angle_to_goal << std::endl;
 
 
             Eigen::MatrixXf cords2(1,2);
@@ -70,13 +68,11 @@ class Calc_ref{
         return atan2f(y,x);
     }
 
-
     private:
      
     float XTE;
     float CTS;
     float refrence_angle;
-
 
     //Waypoints
     Eigen::MatrixXf P;
@@ -86,9 +82,6 @@ class Calc_ref{
 
 
     PIDController pid_c;
-
-
-
 
 };
 
