@@ -104,10 +104,10 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 
 		for (int i = 3; i < State.rows() ;i+=2)
 		{
-			std::cout << "loopa loopade har loopat" << std::endl;
+			//std::cout << "loopa loopade har loopat" << std::endl;
 			// calculate the distance to the gate
 			float dist = pow(pow(x-State(i),2)+pow(y-State(i+1),2),0.5f);
-			std::cout << x << ' ' << y << ' ' << State(i) << ' ' << State(i+1) << ' ' << dist << std::endl;
+			//std::cout << x << ' ' << y << ' ' << State(i) << ' ' << State(i+1) << ' ' << dist << std::endl;
 			// if better than previous
 			if (dist <= min_distance)
 			{
@@ -122,7 +122,7 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 		// if the closest know landmark isn't within 200mm we have a new landmark
 		if (min_distance > 200.f)
 		{
-			std::cout << "New Landmark: " << min_distance << std::endl;
+			//std::cout << "New Landmark: " << min_distance << std::endl;
 
 			// increase the size of the size state representation
 			State.conservativeResize(State.rows() + 2);
@@ -179,10 +179,14 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 			 delta(1), -delta(0), -q, -delta(1), delta(0);  
 
 		H = 1/q * H * F;
+		std::cout << "H:\n" << H << std::endl;
 
 		MatrixXd K(State.rows(),2);
 
 		K = StateCovariance * H.transpose()*(H*StateCovariance * H.transpose() + Qt).inverse();
+		std::cout << "K:\t" << K << '\n'
+			  << "z:\t" << z << '\n'
+			  << "zhat:\t" << z_hat << std::endl;
 		State = State + K*(z - z_hat);
 
 		MatrixXd I(StateCovariance.rows(),StateCovariance.rows());
