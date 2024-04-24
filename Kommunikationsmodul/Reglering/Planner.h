@@ -13,12 +13,11 @@ public:
             int size=20)
     : x_start{x_start}, y_start{y_start}, start_angle{start_angle},
       x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
-      size {size}, P {size,2}, s {4,2}, calc_ref {} 
+      size {size}, P {size,2}, s {4,2}, calc_ref {}, K {size,1}
     {
         //Matrix for calculations
-        int r = 0; //index in loop
+        int k = 0
         Eigen::MatrixXf l(size,4);
-        //Eigen::MatrixXf s(4,2);
         //Position in s matrix
         s.row(0) << x_start, y_start;
         s.row(1) << (x_start + 700*cos(start_angle)), (y_start + 700*sin(start_angle));
@@ -26,7 +25,7 @@ public:
         s.row(3) << x_goal, y_goal;
 
         Eigen::RowVectorXf distance_vec(size);
-        for(int u = 0; u < size; u++){ //1/18 delar...
+        for(int u = 0; u < size; u++){ 
 
             float a = (u)/19.f;
 
@@ -38,13 +37,47 @@ public:
             l.row(u) << l1, l2, l3, l4;
 
         }
-        //l.row(0) << 1, 0, 0, 0; //might be one pointv wring scaled in the curve..
-        //l.row(size-1) << 0, 0, 0, 1; //special case because its 0 index and its hard to think..
 
         P = l * s; //Calculates the bezier curve
 
+        for(int t = 0; t < size; t++) 
+        //Small code from https://github.com/reiniscimurs/Bezier-Curve/blob/main/Bezier.py
+        //Derivation and second Derivation of the Bezier curve to calculate the curvature in each point
+        {
+            float step = t / size;
+            float x_d = 3*(pow((1-step),2))*(s.coeff(1,0) - P.coeff(0,0)) + 
+                6*(1-step)*(step)*(s.coeff(2,0)-s.coeff(1,0)) +
+                3*(pow(step,2))*(s.coeff(3,0) - s.coeff(2.0));
+
+            float y_d = 3*(pow((1-step),2))*(s.coeff(1,1) - P.coeff(0,1)) + 
+                6*(1-step)*(step)*(s.coeff(2,1)-s.coeff(1,1)) +
+                3*(pow(step,2))*(s.coeff(3,1) - s.coeff(2,1));
+
+            float x_dd = 6*(1-step)*(s.coeff(2,0) -2*s.coeff(1,0) + s.coeff(0,0)) +
+                6*(step)*(s.coeff(3,0) -2*s.coeff(2,0) + s.coeff(1,0));
+
+            float y_dd = 6*(1-step)*(s.coeff(2,1) -2*s.coeff(1,1) + s.coeff(0,1)) +
+                6*(step)*(s.coeff(3,1) -2*s.coeff(2,1) + s.coeff(1,1));
+            //absolute value... 
+            float scaled_speed = 0.1 ; // max steering is 0.5
+            float k = pow(pow((x_d*y_dd - y_d*x_dd)/(pow( (pow(x_d,2) + pow(y_d,2)) ,3.f/2.f)),2),0.5);
+            float min_radius = 700.f;
+            float max_radius = 2000.f;
+            if(k <= min_radius){
+                scaled_speed = 0.1; //minimum scaled speed
+            }else if ( k>= max_radius)
+            {
+                scaled_speed = 0.3; //maximum scaled speed
+            }else{
+                scaled_speed = 0.1 + 0.2*(k-min_radius)/max_radius; //räta linkens ekvation
+            }
+ 
+            K.row(t) << scaled_speed;
+
+        }
+
         //Is done when initalizing..
-        calc_ref = std::make_unique<Calc_ref>(P, x_goal, y_goal, goal_angle);
+        calc_ref = std::make_unique<Calc_ref>(P,K, x_goal, y_goal, goal_angle);
     } 
     virtual ~Planner() 
     {}
@@ -52,6 +85,11 @@ public:
     float getRefAngle(float car_x, float car_y, float car_angle)
     {
         return calc_ref->update_ref(size, car_x, car_y, car_angle);
+    }
+
+    float getRefSpeed()
+    {
+        return calc_ref->get_scaled_Speed(); //Should be a scaled 0.1 to 0.5.. Dont drive backwards autonomt...
     }
 
     std::string getBezier_points()
@@ -83,7 +121,6 @@ public:
         }
 
         return ss.str();
-
     }
 
 private:
@@ -96,6 +133,7 @@ private:
     int size;
     Eigen::MatrixXf P;
     std::unique_ptr<Calc_ref> calc_ref;
+    Eigen::MatrixXf K;
 
 
     Eigen::MatrixXf s;

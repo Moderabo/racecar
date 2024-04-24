@@ -5,9 +5,9 @@
 class Calc_ref{
     public:
     Calc_ref() = default;
-    Calc_ref(Eigen::MatrixXf P,
+    Calc_ref(Eigen::MatrixXf P, Eigen::MatrixXf K,
      float x_goal, float y_goal, float goal_angle): 
-    P{P},x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, pid_c{0.5, {0.87154,6.84371,0,100,1,1}}
+    P{P},x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, pid_c{0.5, {0.87154,6.84371,0,100,1,1}}, K{K}
     {
     }
     virtual ~Calc_ref()
@@ -26,7 +26,6 @@ class Calc_ref{
             d_vec.row(n) << distance;
         }
 
-        Eigen::Index index;
         float XTE = d_vec.minCoeff(&index); //minimum distance to ref line, could be optimiced..
 
         Eigen::MatrixXf rot_M(2,2); //inverse of a rotation matrix in cars angle. 
@@ -56,7 +55,6 @@ class Calc_ref{
             {
                 Add_points.row(i-1) << (x_goal + 50*i*cos(goal_angle)), (y_goal + 50*i*sin(goal_angle));
             }
-
             Copy_P << P, Add_points;
 
             Eigen::MatrixXf cords1(1,2);
@@ -93,6 +91,11 @@ class Calc_ref{
         return CTS;
     }
 
+    float get_scaled_Speed()
+    {
+        return K.coeff(index);
+    }
+
     private:
      
     float XTE;
@@ -105,11 +108,9 @@ class Calc_ref{
     float x_goal; 
     float y_goal; 
     float goal_angle;
+    PIDController pid_c; //currently  trash
 
-
-    PIDController pid_c;
-
-    //Testing private variables!
+    Eigen::Index index;
 
 };
 
