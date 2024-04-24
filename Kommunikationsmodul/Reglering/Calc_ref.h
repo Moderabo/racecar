@@ -47,24 +47,23 @@ class Calc_ref{
             cords2 = cords2 * rot_M; //1x2 matrix
             angle_from_tangent = angle(cords2.coeff(0,1),cords2.coeff(0,0));
 
-        }else if (index + size/10 == size) //If car are close to the goal set new goal point further away.
+        //Later kolla snär kurva här med true/false!!!!
+        }else if (index + size/10 >= size) //If car are close to the goal set new goal point further away.
         {
+            Eigen::MatrixXf Copy_P(size+10,2);
+            Eigen::MatrixXf Add_points(10,2);
+            for(int i = 1; i <= 10, i++)
+            {
+                Add_points.row(i-1) << (x_goal + 50*i*cos(goal_angle) - car_x), (x_goal + 50*i*sin(goal_angle) - car_y);
+            }
+
+            Copy_P << P, Add_points;
+
             Eigen::MatrixXf cords1(1,2);
-            cords1.row(0) << (x_goal + 200*cos(goal_angle) - car_x), (x_goal + 200*sin(goal_angle) - car_y);
+            cords1.row(0) << (Copy_P.coeff(index + size/10,0) - car_x), (Copy_P.coeff(index + size/10,1) - car_y);
             cords1 = cords1 * rot_M; //1x2 matrix
             angle_to_goal = angle(cords1.coeff(0,1),cords1.coeff(0,0));
-
-
-            angle_from_tangent = goal_angle
-        }
-        else if (index + size/10 > size) //If car are close to the goal set new goal point further away.
-        {
-            Eigen::MatrixXf cords1(1,2);
-            cords1.row(0) << (x_goal + 500*cos(goal_angle) - car_x), (x_goal + 500*sin(goal_angle) - car_y);
-            cords1 = cords1 * rot_M; //1x2 matrix
-            angle_to_goal = angle(cords1.coeff(0,1),cords1.coeff(0,0));
-
-            angle_from_tangent = goal_angle;
+            angle_from_tangent = 0 //close to gate anyway..
         }
 
         CTS = angle_from_tangent;

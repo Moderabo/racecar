@@ -99,12 +99,19 @@ public:
     std::string getBezier_curve()
     {
         std::ostringstream ss;
-        for(int i {0};i<=19; i++)
+        Eigen::MatrixXf Copy_P(size+10,2);
+        Eigen::MatrixXf Add_points(10,2);
+        for(int i = 1; i <= 10, i++)
         {
-             ss << P.coeff(i,0) << "," << P.coeff(i,1) << ";";
+            Add_points.row(i-1) << (x_goal + 50*i*cos(goal_angle) - car_x), (x_goal + 50*i*sin(goal_angle) - car_y);
         }
-        ss << P.coeff(19,0) + 500*cos(goal_angle) << "," << P.coeff(19,1) + 500*sin(goal_angle) << ";";
-        ss << P.coeff(19,0) + 250*cos(goal_angle) << "," << P.coeff(19,1) + 250*sin(goal_angle) << ";";
+
+        Copy_P << P, Add_points;
+            
+        for(int i {0};i<= size + 10-1; i++)
+        {
+             ss << Copy_P.coeff(i,0) << "," << Copy_P.coeff(i,1) << ";";
+        }
 
         return ss.str();
 
