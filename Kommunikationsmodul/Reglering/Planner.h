@@ -61,7 +61,7 @@ public:
 
         Eigen::RowVectorXf distance_vec(size);
 
-        for(float u = 1.f/size; u <=(1.f-1.f/size); u = u + 1.f/size){
+        for(float u = 1.f/size; u <=(1.f-1.f/size); u = u + 1.f/(size-2)){
 
             float l1 = pow((1.f-u),(3));
             float l2 = 3*pow((1.f-u),(2))*(u);
