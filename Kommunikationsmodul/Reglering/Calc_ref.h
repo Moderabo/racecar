@@ -52,9 +52,9 @@ class Calc_ref{
         {
             Eigen::MatrixXf Copy_P(size+10,2);
             Eigen::MatrixXf Add_points(10,2);
-            for(int i = 1; i <= 10, i++)
+            for(int i = 1; i <= 10; i++)
             {
-                Add_points.row(i-1) << (x_goal + 50*i*cos(goal_angle) - car_x), (x_goal + 50*i*sin(goal_angle) - car_y);
+                Add_points.row(i-1) << (x_goal + 50*i*cos(goal_angle)), (y_goal + 50*i*sin(goal_angle));
             }
 
             Copy_P << P, Add_points;
@@ -63,7 +63,7 @@ class Calc_ref{
             cords1.row(0) << (Copy_P.coeff(index + size/10,0) - car_x), (Copy_P.coeff(index + size/10,1) - car_y);
             cords1 = cords1 * rot_M; //1x2 matrix
             angle_to_goal = angle(cords1.coeff(0,1),cords1.coeff(0,0));
-            angle_from_tangent = 0 //close to gate anyway..
+            angle_from_tangent = 0; //close to gate anyway..
         }
 
         CTS = angle_from_tangent;

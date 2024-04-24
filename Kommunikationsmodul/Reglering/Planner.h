@@ -101,9 +101,9 @@ public:
         std::ostringstream ss;
         Eigen::MatrixXf Copy_P(size+10,2);
         Eigen::MatrixXf Add_points(10,2);
-        for(int i = 1; i <= 10, i++)
+        for(int i = 1; i <= 10; i++)
         {
-            Add_points.row(i-1) << (x_goal + 50*i*cos(goal_angle) - car_x), (x_goal + 50*i*sin(goal_angle) - car_y);
+            Add_points.row(i-1) << (x_goal + 50*i*cos(goal_angle)), (y_goal + 50*i*sin(goal_angle));
         }
 
         Copy_P << P, Add_points;
