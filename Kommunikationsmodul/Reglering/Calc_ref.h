@@ -58,7 +58,7 @@ class Calc_ref{
         }
         CTS = angle_from_tangent;
 
-        refrence_angle = 0.7 * angle_to_goal + 0.1 * CTS + car_angle;
+        refrence_angle = 0.9 * angle_to_goal + 0.1 * CTS + car_angle;
 
         return refrence_angle*9/(3.14); //*pid_c.update(refrence_angle, car_angle)
         //returns something normally between pi/9 and if angle is bigger its capped later in main.

@@ -7,7 +7,8 @@
 
 #include "I2C_Connection.h"
 #include "Lidar.h"
-//#include "Planner.h"
+#include "MQTT_Connection.h"
+#include "Planner.h"
 
 using namespace std;
 using namespace Eigen;
@@ -204,9 +205,14 @@ int main(int argc, const char * argv[])
 {
     signal(SIGINT, ctrlc);
 
-	// Setup I2C communication
-	I2CConnection i2c_connection {};
-    
+    // Setup I2C communication
+    I2CConnection i2c_connection {};
+
+    // Setup MQTT communication
+    MQTT_Connection mqtt_connection {};
+
+
+
     // Initiate LiDAR
     Lidar lidar {};
 
@@ -230,7 +236,7 @@ int main(int argc, const char * argv[])
 
         AltGate prev_gate { prev_next_gate.first };
         AltGate next_gate { prev_next_gate.second };
-        /*
+        
         std::cout << "Previous gate: " << prev_gate.x << ", "
                                        << prev_gate.y << ", "
                                        << prev_gate.angle << '\n';
@@ -242,17 +248,22 @@ int main(int argc, const char * argv[])
                         next_gate.x, next_gate.y ,next_gate.angle};
 
         float angle_to_steer = bezier.getRefAngle(0, 0, 0);
-        */
-        float angle_to_steer {3*atan2f(next_gate.y, next_gate.x)};
+        
+        //float angle_to_steer {3*atan2f(next_gate.y, next_gate.x)};
         std::cout << "trying angle: " << angle_to_steer << std::endl;
 
     	angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
 
+	    mqtt_connection.pubCones(cones);
+
+        mqtt_connection.pubBezier(bezier.getBezier_points());
+        mqtt_connection.pubCurve(bezier.getBezier_curve());
+
         i2c_connection.steer(angle_to_steer);
     	sleep(0.1);
-    	i2c_connection.gas(0.1);
+    	i2c_connection.gas(0);
     	sleep(0.1);
-	int g = i2c_connection.getSpeed();
+        int g = i2c_connection.getSpeed();
         if (ctrl_c_pressed){
             break;
         }
