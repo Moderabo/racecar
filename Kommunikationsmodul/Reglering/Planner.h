@@ -13,7 +13,7 @@ public:
             int size=20)
     : x_start{x_start}, y_start{y_start}, start_angle{start_angle},
       x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
-      size {size}, P {size,2}, s {4,2}, calc_ref {}
+      size {size}, P {size,2}, s {4,2}, calc_ref {} 
     {
         //Matrix for calculations
         int r = 0; //index in loop
