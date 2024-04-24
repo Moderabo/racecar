@@ -11,7 +11,7 @@ public:
             int size=20)
     :x_start{x_start}, y_start{y_start}, start_angle{start_angle},
       x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
-      size {size}, P {size,2} s{4,2}
+      size {size}, P {size,2}, s{4,2}
     {
         //Matrix for calculations
         int r = 0; //index in loop
@@ -40,6 +40,7 @@ public:
         l.row(size-1) << 0, 0, 0, 1; //special case because its 0 index and its hard to think..
 
         P = l * s; //Calculates the bezier curve
+        std::cout << P << std::endl;
 
         calc_ref = Calc_ref(P, x_goal, y_goal, goal_angle); //Is done when initalizing..
     } 
@@ -84,7 +85,7 @@ public:
     std::string getBezier_points()
     {
         std::ostringstream ss;
-        for(int i;i<=3; i++)
+        for(int i = 0;i<=3; i++)
         {
             ss << s.coeff(i,0) << "," << s.coeff(i,1) << ";";
         }
@@ -95,10 +96,12 @@ public:
     std::string getBezier_curve()
     {
         std::ostringstream ss;
-        for(int i;i<=19; i++)
+        for(int i = 0;i<=19; i++)
         {
-             ss << s.coeff(i,0) << "," << s.coeff(i,1) << ";";
+             ss << P.coeff(i,0) << "," << P.coeff(i,1) << ";";
         }
+        ss << P.coeff(19,0) + 500*cos(goal_angle) << "," << P.coeff(19,1) + 500*sin(goal_angle) << ";";
+        ss << P.coeff(19,0) + 250*cos(goal_angle) << "," << P.coeff(19,1) + 250*sin(goal_angle) << ";";
 
         return ss;
 
@@ -115,7 +118,7 @@ private:
     Eigen::MatrixXf P;
     Calc_ref calc_ref;
 
-    Eigen::MatrixXf s(4,2);
+    Eigen::MatrixXf s;
 };
 
 #endif /* PLANNER_H_ */
