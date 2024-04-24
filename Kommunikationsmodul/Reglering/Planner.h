@@ -16,7 +16,7 @@ public:
       size {size}, P {size,2}, s {4,2}, calc_ref {}, K {size,1}
     {
         //Matrix for calculations
-        int k = 0
+        int k = 0;
         Eigen::MatrixXf l(size,4);
         //Position in s matrix
         s.row(0) << x_start, y_start;

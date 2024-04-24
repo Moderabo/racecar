@@ -7,7 +7,7 @@ class Calc_ref{
     Calc_ref() = default;
     Calc_ref(Eigen::MatrixXf P, Eigen::MatrixXf K,
      float x_goal, float y_goal, float goal_angle): 
-    P{P},x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, pid_c{0.5, {0.87154,6.84371,0,100,1,1}}, K{K}
+    P{P}, K{K}, x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, pid_c{0.5, {0.87154,6.84371,0,100,1,1}}
     {
     }
     virtual ~Calc_ref()
@@ -105,6 +105,7 @@ class Calc_ref{
 
     //Waypoints
     Eigen::MatrixXf P;
+    Eigen::MatrixXf K;
     float x_goal; 
     float y_goal; 
     float goal_angle;
