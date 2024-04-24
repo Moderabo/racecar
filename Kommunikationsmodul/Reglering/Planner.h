@@ -26,20 +26,20 @@ public:
         s.row(3) << x_goal, y_goal;
 
         Eigen::RowVectorXf distance_vec(size);
-        for(float u = 1.f/size; u <=(1.f-1.f/size); u = u + 1.f/(size-2)){
+        for(int u = 0; u < size; u++){ //1/18 delar...
 
-            float l1 = pow((1.f-u),(3));
-            float l2 = 3*pow((1.f-u),(2))*(u);
-            float l3 = 3*(1.f-u)*pow((u),(2));
-            float l4 = pow((u),(3));
+            float a = (u)/19.f;
 
-            r = int(size*u);
+            float l1 = pow((1.f-a),(3));
+            float l2 = 3*pow((1.f-a),(2))*(a);
+            float l3 = 3*(1.f-a)*pow((a),(2));
+            float l4 = pow((a),(3));
 
-            l.row(r) << l1, l2, l3, l4;
+            l.row(u) << l1, l2, l3, l4;
 
         }
-        l.row(0) << 1, 0, 0, 0; //might be one pointv wring scaled in the curve..
-        l.row(size-1) << 0, 0, 0, 1; //special case because its 0 index and its hard to think..
+        //l.row(0) << 1, 0, 0, 0; //might be one pointv wring scaled in the curve..
+        //l.row(size-1) << 0, 0, 0, 1; //special case because its 0 index and its hard to think..
 
         P = l * s; //Calculates the bezier curve
 
@@ -96,8 +96,7 @@ private:
     int size;
     Eigen::MatrixXf P;
     std::unique_ptr<Calc_ref> calc_ref;
-        //Calc_ref calc_ref_tmp {P, x_goal, y_goal, goal_angle};
-        //Calc_ref calc_ref_tmp {P, x_goal, y_goal, goal_angle};
+
 
     Eigen::MatrixXf s;
 };
