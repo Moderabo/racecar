@@ -133,6 +133,12 @@ public:
         return ss.str();
     }
 
+    Eigen::MatrixXf get_Bezier_mat()
+    {
+        return s;
+    }
+
+
     std::string getBezier_curve()
     {
         std::ostringstream ss;
