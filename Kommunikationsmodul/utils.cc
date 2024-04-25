@@ -1,3 +1,4 @@
+#include <cmath>
 #include <vector>
 #include "utils.h"
 
@@ -8,12 +9,15 @@ AltGate convertGate(Gate &gate)
     float y0 { gate.first.y };
     float x1 { gate.second.x };
     float y1 { gate.second.y };
+    // Vector from 0 to 1 cone
+    float x01 { (x1 - x0) / sqrt((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)) };
+    float y01 { (y1 - y0) / sqrt((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)) };
 
     AltGate alt_gate;
-
-    alt_gate.x = (x1 + x0) / 2;
-    alt_gate.y = (y1 + y0) / 2;
-    //alt_gate.angle = acos( abs(y1-y0) / sqrt( (x1-x0)*(x1-x0)+(y1-y0)*(y1-y0) ) );
+    // Calculate midpoint of the space between cones and not from cone midpoint
+    alt_gate.x = ( x0 + x1 + x01 * (gate.first.r-gate.second.r) ) / 2;
+    alt_gate.y = ( y0 + y1 + y01 * (gate.first.r-gate.second.r) ) / 2;
+    
     float theta = atan2f(y1-y0,x1-x0);
 
     if ( theta < -M_PI / 2 )

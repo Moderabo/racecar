@@ -32,44 +32,45 @@ void Lidar::update()
 	// get the lidar data
     op_result = lidar->grabScanDataHq(nodes, count);
 
-    // check if everythings ok
-    if (SL_IS_OK(op_result)) {
-        lidar->ascendScanData(nodes, count);
+    // Check if result is invalid
+    if ( !SL_IS_OK(op_result) )
+    {
+        return;
+    }
 
-        int object  = 0;
+    lidar->ascendScanData(nodes, count);
 
-        // initialize previous distance to something very big (100 meters)
-        float prev_distance = 100000.f;
+    // initialize previous distance to something very big (100 meters)
+    float prev_distance = 100000.f;
 
-        // loop  through all the points
-        for (int pos = 0; pos < (int)count ; ++pos) {
-            // converte to milimeters and radians
-            float angle = (nodes[pos].angle_z_q14 * 90.f) / 16384.f * M_PI / 180.f;
-            float distance = nodes[pos].dist_mm_q2/4.0f;
-            int quality = nodes[pos].quality >> SL_LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT;
+    // loop  through all the points
+    for (int pos = 0; pos < (int)count ; ++pos) {
+        // converte to milimeters and radians
+        float angle = (nodes[pos].angle_z_q14 * 90.f) / 16384.f * M_PI / 180.f;
+        float distance = nodes[pos].dist_mm_q2/4.0f;
+        int quality = nodes[pos].quality >> SL_LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT;
 
-            switch(quality){
-            // not ok
-            case 0:
-                break;
-            // ok
-            case 47:
-                //std::cout << "Angle: " << angle << "\tdistance " << distance << std::endl;
-                // check if this should be the start of a new object
-                if (abs( distance - prev_distance) > 200.f) {
-                    Cluster cluster {};
-                    clusters.push_back(cluster);
-                }
-
-                Point point;
-                point.x = distance * cos(angle);
-                point.y = distance * sin(angle);
-                clusters.back().push_back(point);
-
-                // uppdate prev_distance
-                prev_distance = distance;
-                break;
+        switch(quality){
+        // not ok
+        case 0:
+            break;
+        // ok
+        case 47:
+            //std::cout << "Angle: " << angle << "\tdistance " << distance << std::endl;
+            // check if this should be the start of a new object
+            if (abs( distance - prev_distance) > 200.f) {
+                Cluster cluster {};
+                clusters.push_back(cluster);
             }
+
+            Point point;
+            point.x = distance * cos(angle);
+            point.y = distance * sin(angle);
+            clusters.back().push_back(point);
+
+            // uppdate prev_distance
+            prev_distance = distance;
+            break;
         }
     }
 
@@ -104,7 +105,7 @@ std::vector<Cone> Lidar::getCones()
 void Lidar::filter()
 {
 	// Remove clusters which have few datapoints
-
+    
 	// indicies of small clusters
 	std::vector<int> small_clusters {};
 	
@@ -135,11 +136,22 @@ void Lidar::findCones()
         float x2 {cluster.back().x};
         float y2 {cluster.back().y};
         float r { sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) ) / 2 };
-
-		if ( r > 230 )
+        
+        // To large to be a cone
+		if ( r > ( 190 + 20 + 10 ) / 2 )
 		{
 			continue;
 		}
+        // Large cone
+        else if ( r > ( 120 + 20 + 10 ) / 2 )
+        {
+            r = 190;
+        }
+        // Small cone
+        else
+        {
+            r = 120;
+        }
 
 		Cone cone;
 		cone.x = (x1 + x2)/2;
