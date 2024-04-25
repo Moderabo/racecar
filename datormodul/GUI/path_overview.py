@@ -14,10 +14,11 @@ class PathOverview(tk.Frame):
         self.x_offset = 0
         self.y_offset = 0
         
-        path_overview = tk.Frame(parent)
+        path_overview = tk.Frame(parent, name="path_overview")
         path_overview.place(x=0, y=0, height=400, width=500)
 
-        self.canvas = tk.Canvas(path_overview, height=400, width=500, bg="#E6E6E6", borderwidth=0, highlightthickness=0)
+        self.canvas = tk.Canvas(path_overview, height=400, width=500, bg="#E6E6E6", 
+                                borderwidth=0, highlightthickness=0, name="canvas")
         self.canvas.place(x=0, y=0)
         
         self.create_grid(self.grid_width)
@@ -38,22 +39,22 @@ class PathOverview(tk.Frame):
         elif event.keysym == "minus" and str(event.widget.focus_get()) != ".terminal.input":
             self.zoom_level -= 0.1
             self.change_zoom(self.zoom_level)
-        elif event.keysym == "Right" and str(event.widget.focus_get()) != ".terminal.input":
+        elif event.keysym == "Right" and str(event.widget.focus_get()) == ".path_overview.canvas":
             self.change_center(x=self.x_offset+5, y=self.y_offset)
-        elif event.keysym == "Left" and str(event.widget.focus_get()) != ".terminal.input":
+        elif event.keysym == "Left" and str(event.widget.focus_get()) == ".path_overview.canvas":
             self.change_center(x=self.x_offset-5, y=self.y_offset)
-        elif event.keysym == "Down" and str(event.widget.focus_get()) != ".terminal.input":
+        elif event.keysym == "Down" and str(event.widget.focus_get()) == ".path_overview.canvas":
             self.change_center(x=self.x_offset, y=self.y_offset-5)
-        elif event.keysym == "Up" and str(event.widget.focus_get()) != ".terminal.input":
+        elif event.keysym == "Up" and str(event.widget.focus_get()) == ".path_overview.canvas":
             self.change_center(x=self.x_offset, y=self.y_offset+5)
-        elif event.keysym == "p" and str(event.widget.focus_get()) != ".terminal.input":
-            self.change_center(100, 100)
+        elif event.keysym == "c" and str(event.widget.focus_get()) == ".path_overview.canvas":
+            self.change_center(0, 0)
         return
 
     def reset(self):
-        self.change_zoom(1)
         self.change_center(0, 0)
         self.change_grid(50)
+        self.change_zoom(1)
 
     def change_center(self, x, y):
         self.x_offset = x
