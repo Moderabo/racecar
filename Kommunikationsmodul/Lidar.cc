@@ -1,4 +1,5 @@
 #include "Lidar.h"
+#include "utils.h"
 
 
 Lidar::Lidar(): clusters {}, cones {}, op_result {},

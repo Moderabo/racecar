@@ -1,5 +1,5 @@
-#ifndef I2C_CONNECTION
-#define I2C_CONNECTION
+#ifndef I2C_CONNECTION_H
+#define I2C_CONNECTION_H
 
 // I2C includes
 #include <iostream>
@@ -38,8 +38,8 @@ public:
         {
             return;
         }
-        uint16_t x_2byte {(0xffff * (1 + x)) / 2};
-        std::cout << "Gas: " << x_2byte << '\n';
+        uint16_t x_2byte {static_cast<uint16_t>((0xffff * (1 + x)) / 2)};
+        //std::cout << "Gas: " << x_2byte << '\n';
         result = wiringPiI2CWriteReg16(fd_CONTROL, 0x02, x_2byte);
     }
 
@@ -51,8 +51,8 @@ public:
         {
             return;
         }
-        uint16_t x_2byte {(0xffff * (1 + x)) / 2};
-        std::cout << "Steer: " << x_2byte << '\n';
+        uint16_t x_2byte {static_cast<uint16_t>((0xffff * (1 + x)) / 2)};
+        //std::cout << "Steer: " << x_2byte << '\n';
         result = wiringPiI2CWriteReg16(fd_CONTROL, 0x01, x_2byte);
     }
 
@@ -62,7 +62,7 @@ public:
         int result;
 
         result = wiringPiI2CReadReg16(fd_SENSOR, 0x01);
-        std::cout << "Speed: " << result << '\n';
+        //std::cout << "Speed: " << result << '\n';
         return result;
     }
 
