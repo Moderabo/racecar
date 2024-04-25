@@ -1,6 +1,5 @@
 import tkinter as tk
 import information
-import time
 
 class Terminal(tk.Frame):
 
@@ -17,14 +16,6 @@ class Terminal(tk.Frame):
         input_area = tk.Entry(terminal, bg="gray", font=("Times New Roman", 15), borderwidth=0, highlightthickness=0, name="input")
         input_area.place(x=0, y=150, width=500, height=50)
         input_area.bind("<Return>", lambda event : self.command_input(input_area, text_area_terminal))
-        input_area.bind("<Key>", self.key_pressed)
-
-    def key_pressed(self, event):
-        if event.keysym == "Up":
-            print("Jaja")
-        elif event.keysym == "Down":
-            print("Nejnej")
-        return
 
     def command_input(self, usr_input, terminal):
         command = usr_input.get()
@@ -49,7 +40,6 @@ class Terminal(tk.Frame):
         elif command_list[0] == "cone" and len(command_list) > 3:
             information.cones.append((float(command_list[1]), float(command_list[2]), float(command_list[3])))
         elif command_list[0] == "cones":
-            print(information.cones)
             info_to_print = str(information.cones)
         elif command_list[0] == "rmvcone" and len(command_list) > 1:
             information.cones.pop(int(command_list[1]))
@@ -57,19 +47,13 @@ class Terminal(tk.Frame):
             self.parent.path_widget.change_grid(int(command_list[1]))
         elif command_list[0] == "zoom" and len(command_list) > 1:
             self.parent.path_widget.change_zoom(float(command_list[1]))
+        elif command_list[0] == "reset":
+            self.parent.path_widget.reset()
         elif command_list[0] == "setup":
-            usr_input.delete(0, "end")
-            terminal.config(state="normal")
-            terminal.insert("end", "\n" + command)
-            terminal.config(state="disabled")
             try:
                 self.parent.setup_mqtt_protocol()
             except:
-                terminal.config(state="normal")
-                terminal.insert("end", "\nCould not connect to car.")
-                terminal.config(state="disabled")
-                terminal.see("end")
-            return
+                info_to_print = "Could not connect to car."
         else:
             usr_input.delete(0, "end")
             terminal.config(state="normal")
