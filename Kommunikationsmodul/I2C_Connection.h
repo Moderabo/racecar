@@ -39,7 +39,7 @@ public:
             return;
         }
         uint16_t x_2byte {(0xffff * (1 + x)) / 2};
-        std::cout << "Gas: " << x_2byte << '\n';
+        //std::cout << "Gas: " << x_2byte << '\n';
         result = wiringPiI2CWriteReg16(fd_CONTROL, 0x02, x_2byte);
     }
 
@@ -52,18 +52,18 @@ public:
             return;
         }
         uint16_t x_2byte {(0xffff * (1 + x)) / 2};
-        std::cout << "Steer: " << x_2byte << '\n';
+        //std::cout << "Steer: " << x_2byte << '\n';
         result = wiringPiI2CWriteReg16(fd_CONTROL, 0x01, x_2byte);
     }
 
 
-    int get_speed()
+    float get_speed()
     {
         int result;
 
-        result = wiringPiI2CRead(fd_SENSOR);
-        std::cout << "Speed: " << result << '\n';
-        return result;
+        result = wiringPiI2CReadReg16(fd_SENSOR, 0x01);
+        //std::cout << "Speed: " << result << '\n';
+        return static_cast< float >(result);
     }
 
 private:

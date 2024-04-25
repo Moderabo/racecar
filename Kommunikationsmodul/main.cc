@@ -7,6 +7,7 @@
 #include "EKFslam.h"
 #include "MQTT_Connection.h"
 #include "Lidar.h"
+#include <chrono>
 
 using namespace std;
 
@@ -139,9 +140,23 @@ void saveGates(std::vector<Gate> &gates)
 }
 
 
+uint64_t timestamp()
+{
+    auto now = std::chrono::system_clock::now();
+    auto tse = now.time_since_epoch();
+    auto msTm = std::chrono::duration_cast<std::chrono::milliseconds>(tse);
+    return uint64_t(msTm.count());
+}
+                            
+
+
 int main(int argc, const char * argv[])
 {
     signal(SIGINT, ctrlc);
+
+    // Timestamps
+    uint64_t    t = timestamp(),
+                tlast = t;
 
     // Setup I2C communication
     I2CConnection i2c_connection {};
@@ -163,15 +178,24 @@ int main(int argc, const char * argv[])
         std::vector<Cluster> clusters {lidar.getPoints()};
     	//saveClusters(clusters);
 
-	    std::vector<Cone> cones {lidar.getCones()};
-	    //saveCones(cones);
-        std::cout << "Beginning SLAM:\n";
-        std::cout << "............................\n";
-        slam.correct(cones);
-        std::cout << "Dimension: "<<(slam.getState().rows()-3)/2.f << '\n';
-        std::cout << "SLAM done!\n";
-        std::vector<Gate> gates;
-        gates = findGates(cones);
+	std::vector<Cone> cones {lidar.getCones()};
+	//saveCones(cones);
+    std::vector<Gate> gates;
+	gates = findGates(cones);
+	std::vector<Cone> EKFcones {};
+	for (auto gate : gates)
+	{
+		EKFcones.push_back(gate.first);
+		EKFcones.push_back(gate.second);
+	}
+	slam.correct(EKFcones);
+	EKFcones.clear();
+	int nr_rows = slam.getState().rows();
+	for (int i = 3; i < nr_rows; i+=2)
+	{
+		Cone tempCone {slam.getState().coeff(i),slam.getState().coeff(i+1), 100.f};
+		EKFcones.push_back(tempCone);
+	}
 
         //saveGates(gates);
 
@@ -186,13 +210,23 @@ int main(int argc, const char * argv[])
         //          << next_gate_midpoint.y << std::endl;
 
         float angle_to_steer = atan2(next_gate_midpoint.y,next_gate_midpoint.x)*3;
-        std::cout << angle_to_steer << '\n';
+
+        float angle = angle_to_steer/3;
 
     	angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
 
-	mqtt_connection.pubCones(cones);
+        float speed = i2c_connection.get_speed();
+        std::cout << speed << std::endl;
 
-	/*std::vector<float> commands_value_list;
+        t = timestamp();
+        float timeStep = static_cast< float >(t - tlast); 
+        tlast = t;
+        //slam.predict(timeStep, angle, speed);
+
+	//mqtt_connection.pubCones(cones);
+	mqtt_connection.pubCones(EKFcones);
+
+	std::vector<float> commands_value_list;
 
 	commands_value_list = mqtt_connection.receiveMsg();
 
@@ -213,7 +247,7 @@ int main(int argc, const char * argv[])
 	sleep(0.1);
 	i2c_connection.gas(commands_value_list[1]);
 	sleep(0.01);
- 	*/
+ 	
 
 
 

@@ -6,7 +6,7 @@ EKFslamObj::EKFslamObj()
 {
     State = VectorXf(3);
     StateCovariance = MatrixXf(3,3);
-    
+
     State << 1.f, 1.f, 0.f;
 
     StateCovariance << 1.f, 0.f, 0.f,
@@ -44,9 +44,7 @@ int EKFslamObj::predict(float TimeStep, float Steer, float Gas)
 						 Gas * sin(Steer + theta),
 						 Gas * sin(Steer) / carLength}};
 
-    std::cout << "Fx.trans\t" << Fx.transpose() << std::endl;
 	State = State + Fx.transpose() * poseUpdate * TimeStep;
-    std::cout << "State\t" << State(0) << "\t" << State(1) << std::endl;
 
     // Update the covvariance matrix
 	MatrixXf I(StateCovariance.rows(), StateCovariance.cols());
@@ -61,9 +59,9 @@ int EKFslamObj::predict(float TimeStep, float Steer, float Gas)
 
 	// Covariance matrix R, choose probability of being correct
 	MatrixXf R(3,3);
-	R << 10, 0, 0,
-		 0, 10, 0,
-		 0, 0, 10;
+	R << 0.04f, 0.f, 0.f,
+		 0.f, 0.04f, 0.f,
+		 0.f, 0.f, 0.04f;
 
 	StateCovariance = Gt * StateCovariance * Gt.transpose() + Fx.transpose() * R * Fx;
 
@@ -78,7 +76,7 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 
 	MatrixXf Qt(2,2);
 	Qt << 10, 0,
-		  0, 10;
+	       0, 10;
 
 
 	// The vector that associate the observation i, with the row j in the state matrix
@@ -96,7 +94,7 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 	{
 		// calculate where the object is in the static coordinate plane
 		float x = cos(theta) * observation.x - cos(M_PI/2 - theta) * observation.y + State(0);
-		float y = cos(theta) * observation.x + sin(M_PI/2 - theta) * observation.y + State(1);
+		float y = sin(theta) * observation.x + sin(M_PI/2 - theta) * observation.y + State(1);
 
 		// the previous minimum distace
 		float min_distance = 1e10;
@@ -119,23 +117,28 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 				j = i;
 			}
 		}
+		//std::cout << "min dist:\t" << min_distance << std::endl;
+		//std::cout << "j:\t" << j << std::endl;
 
 		// if the closest know landmark isn't within 200mm we have a new landmark
-		if (min_distance > 200.f)
+		if (min_distance > 400.f)
 		{
 
 			// increase the size of the size state representation
 			tempState.conservativeResize(tempState.rows() + 2);
-			tempStateCovariance.conservativeResize(tempState.rows(), tempState.rows());
+			//tempStateCovariance.conservativeResize(tempState.rows(), tempState.rows());
+			MatrixXf newCovar(tempState.rows(), tempState.rows());
+ 			newCovar.setZero();
+			newCovar.topLeftCorner(tempState.rows()-2, tempState.rows()-2) << tempStateCovariance;
 
 			// set the position to the measured position
 			tempState(tempState.rows() - 2) = x;
 			tempState(tempState.rows() - 1) = y;
 
 			// with only one measurment the covvariance is big
-			tempStateCovariance(tempStateCovariance.rows() - 2, tempStateCovariance.cols() - 2) = 1e100;
-			tempStateCovariance(tempStateCovariance.rows() - 1, tempStateCovariance.cols() - 1) = 1e100;
-
+			newCovar(newCovar.rows() - 2, newCovar.cols() - 2) = 1e10;
+			newCovar(newCovar.rows() - 1, newCovar.cols() - 1) = 1e10;
+			tempStateCovariance = newCovar;
 
 			// the number of the observation should be the new last land mark
 			j = tempState.rows() - 2;
@@ -143,6 +146,7 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 
 		// put the new know association into the association vector
 		association.push_back(j);
+		//std::cout << "j ny:\t" << j << std::endl;
 	}
     State = tempState;
     StateCovariance = tempStateCovariance;
@@ -155,8 +159,8 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 
 		// distance between car and object
 		Eigen::Vector2f delta;
-		delta << State(association[obs_nr]) - State(0), 
-				 State(association[obs_nr]+1) - State(1);
+		delta << State.coeff(association[obs_nr]) - State.coeff(0), 
+				 State.coeff(association[obs_nr]+1) - State.coeff(1);
 		float q = pow(delta.coeff(0),2)+ pow(delta.coeff(1),2);
 
 		// the observation i guess
@@ -164,14 +168,14 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 		z<< pow(pow(observation.x,2)+pow(observation.y,2),0.5f), atan2(observation.y,observation.x);
 
 		Eigen::Vector2f z_hat;
-		z_hat<< pow(q,0.5f), atan2(delta.coeff(1),delta.coeff(0))- State(2);
+		z_hat<< pow(q,0.5f), atan2(delta.coeff(1),delta.coeff(0))- State.coeff(2);
 
 		// 5xN matrix with zeros
 		MatrixXf F(5,State.rows());
 		F << MatrixXf::Identity(3,3), MatrixXf::Zero(3,State.rows()-3),
 		MatrixXf::Zero(2,State.rows());
 
-		F.block(3,association[obs_nr],4,association[obs_nr]+1) << 1,0,0,1;
+		F.block(3,association[obs_nr],2,2) << 1,0,0,1;
 
 		MatrixXf H(2,5);
 
@@ -179,15 +183,33 @@ int EKFslamObj::correct(std::vector<Cone> &observations)
 			 delta.coeff(1), -delta.coeff(0), -q, -delta.coeff(1), delta.coeff(0);
 
 		H = (1/q) * H * F;
-
-		MatrixXf K(State.rows(),2);
-        MatrixXf Itwo(2,2);
+		//std::cout << State << std::endl;
+		//std::cout << F  << std::endl;
+		//std::cout << State.coeff(0) << ' ' << State.coeff(1) << std::endl;
+		//std::cout << association[obs_nr] << std::endl;
+		//std::cout << State.coeff(association[obs_nr]) << ' ' << State.coeff(association[obs_nr]+1) << std::endl;
+		//std::cout << observation.x << ' ' << observation.y << std::endl;
+		//std::cout << delta.coeff(0) << std::endl;
+		//std::cout << delta.coeff(1) << std::endl;
+		//std::cout << q << std::endl;
+		//std::cout << 1/q << std::endl;
+		//std::cout << H << std::endl;
+	MatrixXf K(State.rows(),2);
+	MatrixXf Itwo(2,2);
         Itwo.setIdentity();
         MatrixXf inv(2, 2);
         inv = (H*StateCovariance * H.transpose() + Qt).householderQr().solve(Itwo);
 		//K = StateCovariance * H.transpose()*(H*StateCovariance * H.transpose() + Qt).inverse();
-        K = StateCovariance * H.transpose()*inv;
+		//std::cout << "state covariance" << std::endl;
+		//std::cout << StateCovariance << std::endl;
+
+		 K = StateCovariance * H.transpose()*inv;
 		State = State + K*(z - z_hat);
+		//std::cout << "Final test" << std::endl;
+		//std::cout << K << std::endl;
+		//std::cout << "z:\n" << z << std::endl;
+		//std::cout << "z_hat:\n" << z_hat << std::endl;
+		//std::cout << State << std::endl;
 
 		MatrixXf I(StateCovariance.rows(),StateCovariance.rows());
 		I.setIdentity();

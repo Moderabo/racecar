@@ -143,7 +143,13 @@ void Lidar::findCones()
 		Cone cone;
 		cone.x = (x1 + x2)/2;
 		cone.y = (y1 + y2)/2;
-        cone.r = r;
+		cone.r = r;
+		// If further away than 3m skip
+		if (cone.x*cone.x+cone.y*cone.y > 2000*2000)
+		{
+			continue;
+		}
+
 		cones.push_back(cone);
 	}
 
