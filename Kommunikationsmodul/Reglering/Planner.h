@@ -117,8 +117,7 @@ public:
         calc_ref->set_K_p_angle_to_goal(fraction);
     }
 
-    void set_
-    K_p_offset_tangent(float fraction)
+    void set_K_p_offset_tangent(float fraction)
     {
         calc_ref->set_K_p_offset_tangent(fraction);
     }
