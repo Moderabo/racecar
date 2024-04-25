@@ -10,7 +10,8 @@ class Planner
 public:
     Planner(float x_start, float y_start, float start_angle,
             float x_goal, float y_goal, float goal_angle,
-            int size=20)
+            int size=20, float min_radius = 700.f, float max_radius = 2000.f,
+            float minimum_scaled_speed = 0.1, float maximum_scaled_speed = 0.3)
     : x_start{x_start}, y_start{y_start}, start_angle{start_angle},
       x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
       size {size}, P {size,2}, s {4,2}, calc_ref {}, K {size,1}
@@ -61,15 +62,14 @@ public:
             //absolute value... 
             float scaled_speed = 0.1 ; // max steering is 0.5
             float k = pow(pow((x_d*y_dd - y_d*x_dd)/(pow( (pow(x_d,2) + pow(y_d,2)) ,3.f/2.f)),2),0.5);
-            float min_radius = 700.f;
-            float max_radius = 2000.f;
+
             if(k <= min_radius){
-                scaled_speed = 0.1; //minimum scaled speed
+                scaled_speed = minimum_scaled_speed;
             }else if ( k>= max_radius)
             {
-                scaled_speed = 0.3; //maximum scaled speed
+                scaled_speed = maximum_scaled_speed; 
             }else{
-                scaled_speed = 0.1 + 0.2*(k-min_radius)/max_radius; //räta linkens ekvation
+                scaled_speed = minimum_scaled_speed + (maximum_scaled_speed - minimum_scaled_speed)*(k-min_radius)/max_radius; //räta linkens ekvation
             }
  
             K.row(t) << scaled_speed;
@@ -81,6 +81,26 @@ public:
     } 
     virtual ~Planner() 
     {}
+
+    void set_min_radius(float radius)
+    {
+        min_radius = radius;
+    }
+
+    void set_max_radius(float radius)
+    {
+        max_radius = radius;
+    }
+
+    void set_maximum_scaled_speed(float scale)
+    {
+        maximum_scaled_speed = scale;
+    }
+
+    void set_minimum_scaled_speed(float scale)
+    {
+        minimum_scaled_speed =scale;
+    }
     
     float getRefAngle(float car_x, float car_y, float car_angle)
     {
@@ -97,7 +117,8 @@ public:
         calc_ref->set_K_p_angle_to_goal(fraction);
     }
 
-    void set_K_p_offset_tangent(float fraction)
+    void set_
+    K_p_offset_tangent(float fraction)
     {
         calc_ref->set_K_p_offset_tangent(fraction);
     }
@@ -147,6 +168,11 @@ private:
 
 
     Eigen::MatrixXf s;
+    float min_radius;
+    float max_radius;
+
+    float minimum_scaled_speed;
+    float maximum_scaled_speed;
 };
 
 #endif /* PLANNER_H_ */
