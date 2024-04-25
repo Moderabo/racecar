@@ -18,22 +18,9 @@
 #include <utility>
 #include <algorithm>
 
+#include "utils.h"
+
 using namespace sl;
-
-struct Point
-{
-    float x;
-    float y;
-};
-
-struct Cone
-{
-    float x;
-    float y;
-    float r;
-};
-
-typedef std::vector<Point> Cluster;
 
 
 class Lidar

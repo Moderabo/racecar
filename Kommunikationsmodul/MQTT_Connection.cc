@@ -5,7 +5,7 @@
 MQTT_Connection::MQTT_Connection()
 {
 
-	int QOS = 0;
+	int QOS = 1;
 	std::string COMMAND_TOPIC = "commands";
 	// Create connect options
 
@@ -94,12 +94,25 @@ void MQTT_Connection::pubCones(std::vector<Cone> &cones)
 
 	std::string payload = "";
 
-	for (int i =0 ; i < cones.size() ; i++)
+	for (auto cone : cones)
         {
-		Cone cone = cones[i];
 		payload = payload + std::to_string(cone.x) + "," + std::to_string(cone.y ) + "," + std::to_string(cone.r) + ";" ;
 	}
 
         m_conesTopic.publish(payload);
 }
 
+void MQTT_Connection::pubBezier(std::string msg)
+{
+        // Publishes Bezier points.
+	std::cout << "Points: " << msg << '\n';
+
+        m_bezierTopic.publish(msg);
+}
+
+void MQTT_Connection::pubCurve(std::string msg)
+{
+        // Publishes all curve points.
+	std::cout << "Curve: " << msg << '\n';
+        m_curveTopic.publish(msg);
+}

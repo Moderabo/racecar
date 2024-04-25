@@ -1,4 +1,5 @@
 #include "Lidar.h"
+#include "utils.h"
 
 
 Lidar::Lidar(): clusters {}, cones {}, op_result {},
@@ -143,13 +144,7 @@ void Lidar::findCones()
 		Cone cone;
 		cone.x = (x1 + x2)/2;
 		cone.y = (y1 + y2)/2;
-		cone.r = r;
-		// If further away than 3m skip
-		if (cone.x*cone.x+cone.y*cone.y > 2000*2000)
-		{
-			continue;
-		}
-
+        cone.r = r;
 		cones.push_back(cone);
 	}
 

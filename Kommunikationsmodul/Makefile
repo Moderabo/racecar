@@ -1,9 +1,9 @@
 
-CCFLAGS = -pthread -Ilidar_lib
+CCFLAGS = -MMD -pthread -Ilidar_lib -IReglering
 
 LDFLAGS = -Llidar_lib -lsl_lidar_sdk -lwiringPi -lpaho-mqttpp3 -lpaho-mqtt3as
 
-main: main.o Lidar.o MQTT_Connection.o EKFslam.o
+main: main.o Lidar.o utils.o MQTT_Connection.o
 	g++ $^ $(CCFLAGS) $(LDFLAGS) -o $@.out
 
 main.o: main.cc
@@ -12,8 +12,8 @@ main.o: main.cc
 %.o: %.cc %.h
 	g++ $(CCFLAGS) $(LDFLAGS) -c $< -o $@
 
-clean:
-	@ \rm -rf *.o *.out
+-include *.d
 
-ekf: 
-	g++ EKF/test.cc EKF/EKFslam.cc -IEKF -Ilidar_lib -o testEKF.out
+clean:
+	@ \rm -rf *.o *.out *.d
+
