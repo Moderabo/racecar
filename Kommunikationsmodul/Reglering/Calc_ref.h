@@ -6,8 +6,11 @@ class Calc_ref{
     public:
     Calc_ref() = default;
     Calc_ref(Eigen::MatrixXf P, Eigen::MatrixXf K,
-     float x_goal, float y_goal, float goal_angle): 
-    P{P}, K{K}, x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, pid_c{0.5, {0.87154,6.84371,0,100,1,1}}
+     float x_goal, float y_goal, float goal_angle, float K_p_angle_to_goal = 0.7,
+    float K_p_offset_tangent = 0.1): 
+    P{P}, K{K}, x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
+    pid_c{0.5, {0.87154,6.84371,0,100,1,1}}, K_p_angle_to_goal{K_p_angle_to_goal},
+    K_p_offset_tangent{K_p_offset_tangent}
     {
     }
     virtual ~Calc_ref()
@@ -66,10 +69,20 @@ class Calc_ref{
 
         CTS = angle_from_tangent;
 
-        refrence_angle = 0.7 * angle_to_goal + 0.1 * CTS + car_angle;
+        refrence_angle = K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS + car_angle;
 
         return refrence_angle*9/(3.14); //*pid_c.update(refrence_angle, car_angle)
-        //returns something normally between pi/9 and if angle is bigger its capped later in main.
+        //returns something normally between pi/9 scaled to [0,1] and if angle is bigger its capped later in main.
+    }
+
+    void set_K_p_angle_to_goal(float fraction)
+    {
+        K_p_angle_to_goal = fraction;
+    }
+
+    void set_K_p_offset_tangent(float fraction)
+    {
+        K_p_offset_tangent = fraction;
     }
 
     float angle(float y, float x){     
@@ -112,6 +125,8 @@ class Calc_ref{
     PIDController pid_c; //currently  trash
 
     Eigen::Index index;
+    float K_p_angle_to_goal;
+    float K_p_offset_tangent;
 
 };
 

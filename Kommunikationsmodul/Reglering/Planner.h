@@ -92,6 +92,16 @@ public:
         return calc_ref->get_scaled_Speed(); //Should be a scaled 0.1 to 0.5.. Dont drive backwards autonomt...
     }
 
+    void set_K_p_angle_to_goal(float fraction)
+    {
+        calc_ref->set_K_p_angle_to_goal(fraction);
+    }
+
+    void set_K_p_offset_tangent(float fraction)
+    {
+        calc_ref->set_K_p_offset_tangent(fraction);
+    }
+
     std::string getBezier_points()
     {
         std::ostringstream ss;
