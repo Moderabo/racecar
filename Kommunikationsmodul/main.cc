@@ -84,6 +84,12 @@ int main(int argc, const char * argv[])
                     sleep(0.01);
                     break;
                 case 2:  // Automatic
+                    bezier.set_maximum_scaled_speed(commands.at(1));
+                    bezier.set_minimum_scaled_speed(commands.at(2));
+                    bezier.set_min_radius(commands.at(3));
+                    bezier.set_max_radius(commands.at(4));
+                    bezier.set_K_p_angle_to_goal(commands.at(5));
+                    bezier.set_K_p_offset_tangent(commands.at(6));
                     lidar.start();
                     break;
                 default:
