@@ -6,11 +6,11 @@ class Calc_ref{
     public:
     Calc_ref() = default;
     Calc_ref(Eigen::MatrixXf P, Eigen::MatrixXf K,
-     float x_goal, float y_goal, float goal_angle, float K_p_angle_to_goal = 0.7,
-    float K_p_offset_tangent = 0.1): 
+     float x_goal, float y_goal, float goal_angle, float K_p_angle_to_goal = 0.5,
+    float K_p_offset_tangent = 0.35): 
     P{P}, K{K}, x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
     pid_c{0.5, {0.87154,6.84371,0,100,1,1}}, K_p_angle_to_goal{K_p_angle_to_goal},
-    K_p_offset_tangent{K_p_offset_tangent}, look_ahead_dist{2}
+    K_p_offset_tangent{K_p_offset_tangent}, look_ahead_dist{3}
     {
     }
     virtual ~Calc_ref()
@@ -21,7 +21,7 @@ class Calc_ref{
         float angle_from_tangent;
         float angle_to_goal;
 
-        Eigen::VectorXf d_vec(size);
+        Eigen::VectorXf d_vec(P.rows());
 
         // here we should loop over all the points in the P vector (size + extra after gate)
         for(int n=0; n < P.rows(); n++ ){

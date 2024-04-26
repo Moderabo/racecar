@@ -10,7 +10,7 @@ class Planner
 public:
     Planner(float x_start, float y_start, float start_angle,
             float x_goal, float y_goal, float goal_angle,
-            int size=20, float min_radius = 700.f, float max_radius = 2000.f,
+            int size=20, float min_radius = 400.f, float max_radius = 2000.f,
             float minimum_scaled_speed = 0.1, float maximum_scaled_speed = 0.3)
     : x_start{x_start}, y_start{y_start}, start_angle{start_angle},
       x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
@@ -20,9 +20,11 @@ public:
         int k = 0;
         Eigen::MatrixXf l(size,4);
         //Position in s matrix
+        float len = 0.5f*pow(pow(x_start-x_goal,2)+pow(y_start-y_goal,2),0.5f);
+        std::cout << len << std::endl;
         s.row(0) << x_start, y_start;
-        s.row(1) << (x_start + 700*cos(start_angle)), (y_start + 700*sin(start_angle));
-        s.row(2) << (x_goal - 700*cos(goal_angle)), (y_goal - 700*sin(goal_angle));
+        s.row(1) << (x_start + len*cos(start_angle)), (y_start + len*sin(start_angle));
+        s.row(2) << (x_goal - len*cos(goal_angle)), (y_goal - len*sin(goal_angle));
         s.row(3) << x_goal, y_goal;
 
         Eigen::RowVectorXf distance_vec(size);

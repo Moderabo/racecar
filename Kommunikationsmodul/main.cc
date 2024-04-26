@@ -100,7 +100,7 @@ int main(int argc, const char * argv[])
 
         i2c_connection.steer(angle_to_steer);
     	sleep(0.1);
-    	i2c_connection.gas(gas);
+    	i2c_connection.gas(1.5*gas);
     	sleep(0.1);
         speed = i2c_connection.getSpeed();
 
