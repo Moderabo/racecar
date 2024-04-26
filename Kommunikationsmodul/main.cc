@@ -44,6 +44,8 @@ int main(int argc, const char * argv[])
     // Initiate LiDAR
     Lidar lidar {};
 
+    Planner bezier{};
+
     uint64_t t {0};
     uint64_t tstart {timestamp()};
     int state {0};
@@ -94,7 +96,7 @@ int main(int argc, const char * argv[])
             }
         }
 
-        // Automatic & Manual: get lidar data
+        // Automatic: get lidar data
         if ( state == 2 )
         {
             // Fetch new LiDAR data
