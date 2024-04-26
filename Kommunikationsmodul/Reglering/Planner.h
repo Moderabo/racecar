@@ -13,24 +13,28 @@ public:
             int size=20, float min_radius = 400.f, float max_radius = 2000.f,
             float minimum_scaled_speed = 0.1, float maximum_scaled_speed = 0.3)
     : x_start{x_start}, y_start{y_start}, start_angle{start_angle},
-      x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
-      size {size}, P {size+5,2}, s {4,2}, calc_ref {}, K {size,1}
+      x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, s {4,2}, calc_ref {}
     {
         //Matrix for calculations
         int k = 0;
+
+        // base the number of points in the parameter curve on distance between gates
+        float len = pow(pow(x_start-x_goal,2)+pow(y_start-y_goal,2),0.5f);
+        size = (1.3f*len)/70;
+        P = Eigen::MatrixXf(size+5,2); // here we add 5 points after the last gate
+        K = Eigen::MatrixXf(size,1);
         Eigen::MatrixXf l(size,4);
+
         //Position in s matrix
-        float len = 0.5f*pow(pow(x_start-x_goal,2)+pow(y_start-y_goal,2),0.5f);
-        std::cout << len << std::endl;
         s.row(0) << x_start, y_start;
-        s.row(1) << (x_start + len*cos(start_angle)), (y_start + len*sin(start_angle));
-        s.row(2) << (x_goal - len*cos(goal_angle)), (y_goal - len*sin(goal_angle));
+        s.row(1) << (x_start + 0.5f*len*cos(start_angle)), (y_start + 0.5f*len*sin(start_angle));
+        s.row(2) << (x_goal - 0.5f*len*cos(goal_angle)), (y_goal - 0.5f*len*sin(goal_angle));
         s.row(3) << x_goal, y_goal;
 
         Eigen::RowVectorXf distance_vec(size);
         for(int u = 0; u < size; u++){ 
 
-            float a = (u)/19.f;
+            float a = (u)/(size-1.f);
 
             float l1 = pow((1.f-a),(3));
             float l2 = 3*pow((1.f-a),(2))*(a);
@@ -40,9 +44,6 @@ public:
             l.row(u) << l1, l2, l3, l4;
 
         }
-
-        //P = l * s; //Calculates the bezier curve
-
         // Here we add the extra points after the gate
         Eigen::MatrixXf Add_points(P.rows() - size,2);
         for(int i = 1; i <= P.rows()-size; i++)
