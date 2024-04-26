@@ -28,6 +28,7 @@ public:
 
 private:
 	mqtt::async_client m_cli{"10.42.0.1","RPi" };
+
 	mqtt::topic m_speedTopic{m_cli,"data" ,1 };
 	mqtt::topic m_conesTopic{m_cli,"cones" ,1 };
 	mqtt::topic m_bezierTopic{m_cli,"bezier" ,1 };

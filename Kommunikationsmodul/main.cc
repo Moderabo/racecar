@@ -46,13 +46,17 @@ int main(int argc, const char * argv[])
     Lidar lidar {};
 
     uint64_t t {0};
-    uint64_t tlast {0};
+    uint64_t tstart {timestamp()};
     int speed {0};
 
 
     // fetch result and print it out
     for(int i = 0; i < 10000; ++i)
     {
+	if (ctrl_c_pressed){
+            break;
+        }
+
         // Fetch new LiDAR data
         lidar.update();
 
@@ -74,14 +78,14 @@ int main(int argc, const char * argv[])
         AltGate prev_gate { prev_next_gate.first };
         AltGate next_gate { prev_next_gate.second };
 
-        std::cout << "Previous gate: " << prev_gate.x << ", "
+        /*std::cout << "Previous gate: " << prev_gate.x << ", "
                                        << prev_gate.y << ", "
                                        << prev_gate.angle << '\n';
         std::cout << "Next gate: " << next_gate.x << ", "
                                    << next_gate.y << ", "
-                                   << next_gate.angle << '\n';
+                                   << next_gate.angle << '\n';*/
 
-        // Route planning and calculation of 
+        // Route planning and calculation of
         Planner bezier {prev_gate.x, prev_gate.y, prev_gate.angle,
                         next_gate.x, next_gate.y ,next_gate.angle};
 
@@ -93,25 +97,45 @@ int main(int argc, const char * argv[])
     	angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
     	float gas = std::max(-1.f, std::min(1.2f*bezier.getRefSpeed(), 1.f));
 
-	    mqtt_connection.pubCones(cones);
-
+	mqtt_connection.pubCones(cones);
         mqtt_connection.pubBezier(bezier.getBezier_points());
         mqtt_connection.pubCurve(bezier.getBezier_curve());
 
-        i2c_connection.steer(angle_to_steer);
+        /*i2c_connection.steer(angle_to_steer);
     	sleep(0.1);
-    	i2c_connection.gas(0.15);
+    	i2c_connection.gas(0);
     	sleep(0.1);
-        speed = i2c_connection.getSpeed();
+        speed = i2c_connection.getSpeed();*/
+	std::vector<float> commands_value_list;
 
-	t = timestamp();
-        tlast = t - tlast;
-	mqtt_connection.pubSpeed( tlast, speed );
+	commands_value_list = mqtt_connection.receiveMsg();
 
-        if (ctrl_c_pressed){
-            break;
-        }
+	if( commands_value_list.empty() ){
+		continue;
+	}
+
+	if(commands_value_list[2])
+	{
+		i2c_connection.steer(0);
+		sleep(0.01);
+           	i2c_connection.gas(0);
+		break;
+	}
+
+
+	i2c_connection.steer(commands_value_list[0]);
+	sleep(0.05);
+	i2c_connection.gas(commands_value_list[1]);
+	sleep(0.01);
+	speed = i2c_connection.getSpeed();
+
+
+
+        t = timestamp() - tstart;
+	mqtt_connection.pubSpeed( t, speed );
+
     }
     return 0;
 }
+
 
