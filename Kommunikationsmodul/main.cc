@@ -2,7 +2,6 @@
  *  RPi main script
  *
  */
-#include <Eigen/Dense>
 #include <iostream>
 #include <chrono>
 
@@ -51,7 +50,7 @@ int main(int argc, const char * argv[])
     std::vector<float> commands;
 
     // fetch result and print it out
-    for(int i = 0; i < 10000; ++i)
+    while ( true )
     {
 	    if (ctrl_c_pressed)
         {
@@ -74,12 +73,13 @@ int main(int argc, const char * argv[])
                     i2c_connection.steer(0);
                     sleep(0.05);
                     i2c_connection.gas(0);
+                    sleep(0.01);
                     break;
                 case 1:  // Manual
-                    lidar.start();
                     i2c_connection.steer(commands.at(1));
                     sleep(0.05);
                     i2c_connection.gas(commands.at(2));
+                    sleep(0.01);
                     break;
                 case 2:  // Automatic
                     lidar.start();
@@ -89,12 +89,13 @@ int main(int argc, const char * argv[])
                     i2c_connection.steer(0);
                     sleep(0.05);
                     i2c_connection.gas(0);
+                    sleep(0.01);
                     break;
             }
         }
 
         // Automatic & Manual: get lidar data
-        if ( state == 1 || state == 2 )
+        if ( state == 2 )
         {
             // Fetch new LiDAR data
             lidar.update();
@@ -124,27 +125,23 @@ int main(int argc, const char * argv[])
             mqtt_connection.pubCones(cones);
             mqtt_connection.pubBezier(bezier.getBezier_points());
             mqtt_connection.pubCurve(bezier.getBezier_curve());
+
+            // Automatic: steer and gas
+            if ( state == 2 )
+            {
+                float angle_to_steer = bezier.getRefAngle(0, 0, 0);
+                angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
+                float gas = std::max(-1.f, std::min(1.2f*bezier.getRefSpeed(), 1.f));
+
+                i2c_connection.steer(angle_to_steer);
+                sleep(0.05);
+                i2c_connection.gas(bezier.getRefSpeed());
+                sleep(0.01);
+                int speed = i2c_connection.getSpeed();
+                sleep(0.01);
+                mqtt_connection.pubSpeed( t, speed );
+            }
         }
-
-        // Automatic: steer and gas
-        if ( state == 2 )
-        {
-            float angle_to_steer = bezier.getRefAngle(0, 0, 0);
-            angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
-            float gas = std::max(-1.f, std::min(1.2f*bezier.getRefSpeed(), 1.f));
-
-            i2c_connection.steer(angle_to_steer);
-            sleep(0.05);
-            i2c_connection.gas(bezier.getRefSpeed());
-            sleep(0.01);
-        }
-
-        if ( state == 1 || state == 2 )
-        {
-            int speed = i2c_connection.getSpeed();
-            mqtt_connection.pubSpeed( t, speed );
-        }
-
     }
     return 0;
 }

@@ -1,4 +1,3 @@
-s
 #include "MQTT_Connection.h"
 
 
