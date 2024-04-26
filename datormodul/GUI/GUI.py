@@ -5,11 +5,12 @@ import path_overview
 import terminal
 import data_overview
 import mqtt
-import rorry
 import xbox
 import read_keyboard
 import paho.mqtt.client as client
 import information
+from datetime import datetime
+
 
 def clamp(minimum, x, maximum):
     return max(minimum, min(x, maximum))
@@ -37,13 +38,14 @@ class GUI(tk.Tk):
         #============================
 
         #=====Set up MQTT client=====
+        self.mqtt_commands = mqtt.Mqtt()
         self.unacked_publish = set()
         self.mqtt_client = client.Client(client.CallbackAPIVersion.VERSION2)
-        self.mqtt_client.on_connect = mqtt.on_connect
-        self.mqtt_client.on_message = mqtt.on_message
-        self.mqtt_client.on_subscribe = mqtt.on_subscribe
-        self.mqtt_client.on_unsubscribe = mqtt.on_unsubscribe
-        self.mqtt_client.on_publish = mqtt.on_publish
+        self.mqtt_client.on_connect = self.mqtt_commands.on_connect
+        self.mqtt_client.on_message = self.mqtt_commands.on_message
+        self.mqtt_client.on_subscribe = self.mqtt_commands.on_subscribe
+        self.mqtt_client.on_unsubscribe = self.mqtt_commands.on_unsubscribe
+        self.mqtt_client.on_publish = self.mqtt_commands.on_publish
         self.mqtt_client.user_data_set(self.unacked_publish)
         #=============================
 
@@ -53,6 +55,7 @@ class GUI(tk.Tk):
             print("No controller detected!")
         
         self.steering_mode = "stop"
+        self.currently_writing_to_file = False
 
         self.update_GUI()
         self.is_on = True
@@ -64,6 +67,30 @@ class GUI(tk.Tk):
 
     def __del__(self):
         os.system(f'''cmd /c "netsh wlan connect name=eduroam"''')
+        return
+
+    def stop_drive_data(self):
+        if self.currently_writing_to_file == False:
+            self.terminal_widget.text_area_terminal.config(state="normal")
+            self.terminal_widget.text_area_terminal.insert("end", "\nError: Nothing to stop.")
+            self.terminal_widget.text_area_terminal.config(state="disabled")
+            self.terminal_widget.text_area_terminal.see("end")
+            return
+        self.currently_writing_to_file = False
+        self.mqtt_commands.close_file()
+        return
+
+    def record_drive_data(self):
+        if self.currently_writing_to_file == True:
+            self.terminal_widget.text_area_terminal.config(state="normal")
+            self.terminal_widget.text_area_terminal.insert("end", "\nError: Already writing.")
+            self.terminal_widget.text_area_terminal.config(state="disabled")
+            self.terminal_widget.text_area_terminal.see("end")
+            return
+        self.currently_writing_to_file = True
+        now = datetime.now()
+        date_format = now.strftime("%Y-%m-%d_%H-%M-%S")
+        self.mqtt_commands.create_file(date_format + ".txt")
         return
 
     def setup_mqtt_protocol(self):
@@ -135,9 +162,7 @@ class GUI(tk.Tk):
 
             case "stop":
                 self.mqtt_client.loop_stop()
-            
-        #print(len(information.cones))
-        self.after(1000, self.steering)
+        self.after(100, self.steering)
         return
 
 UI = GUI("CarGoBrr2")

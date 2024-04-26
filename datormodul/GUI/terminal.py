@@ -8,14 +8,14 @@ class Terminal(tk.Frame):
         terminal = tk.Frame(parent, height=200, width=500, bg="gray", borderwidth=0, highlightthickness=0, name="terminal")
         terminal.place(x=0, y=400)
 
-        text_area_terminal = tk.Text(terminal, font=("Times New Roman", 15), state="normal", borderwidth=0, highlightthickness=0)
-        text_area_terminal.place(x=0, y=0, width=500, height=150)
-        text_area_terminal.insert("insert", "\n\n\n\n\n")
-        text_area_terminal.config(state="disabled")
+        self.text_area_terminal = tk.Text(terminal, font=("Times New Roman", 15), state="normal", borderwidth=0, highlightthickness=0)
+        self.text_area_terminal.place(x=0, y=0, width=500, height=150)
+        self.text_area_terminal.insert("insert", "\n\n\n\n\n")
+        self.text_area_terminal.config(state="disabled")
         
         input_area = tk.Entry(terminal, bg="gray", font=("Times New Roman", 15), borderwidth=0, highlightthickness=0, name="input")
         input_area.place(x=0, y=150, width=500, height=50)
-        input_area.bind("<Return>", lambda event : self.command_input(input_area, text_area_terminal))
+        input_area.bind("<Return>", lambda event : self.command_input(input_area, self.text_area_terminal))
 
     def command_input(self, usr_input, terminal):
         command = usr_input.get()
@@ -24,11 +24,9 @@ class Terminal(tk.Frame):
 
         if command_list[0] == "exit":
             print("TERMINATING")
+            self.parent.stop_drive_data()
             self.parent.destroy()
             return
-        elif command_list[0] == "h" and len(command_list) > 1:
-            information.data.update({"Hastighet" : float(command_list[1])})
-            print(information.data)
         elif command_list[0] == "mode" and len(command_list) > 1:
             self.parent.change_driving_mode(command_list[1])
         elif command_list[0] == "stop":
@@ -49,6 +47,10 @@ class Terminal(tk.Frame):
             self.parent.path_widget.change_zoom(float(command_list[1]))
         elif command_list[0] == "reset":
             self.parent.path_widget.reset()
+        elif command == "record start":
+            self.parent.record_drive_data()
+        elif command == "record stop":
+            self.parent.stop_drive_data()
         elif command_list[0] == "setup":
             try:
                 self.parent.setup_mqtt_protocol()
