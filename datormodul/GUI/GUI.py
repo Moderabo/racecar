@@ -69,6 +69,12 @@ class GUI(tk.Tk):
         os.system(f'''cmd /c "netsh wlan connect name=eduroam"''')
         return
 
+    def exit(self):
+        self.change_driving_mode("stop")
+        self.stop_drive_data()
+        self.destroy()
+
+
     def stop_drive_data(self):
         if self.currently_writing_to_file == False:
             self.terminal_widget.text_area_terminal.config(state="normal")
@@ -101,13 +107,26 @@ class GUI(tk.Tk):
     def click_event(self, event):
         event.widget.focus_set()
 
-    def change_driving_mode(self, mode):
+    def change_driving_mode(self, mode, parameters = (0.3, 0.1, 800, 2000, 0.5, 0.35)):
         if self.steering_mode == "stop":
             self.mqtt_client.loop_start()
-        msg_info = self.mqtt_client.publish("commands", "0 0 0", qos=1)
+        self.steering_mode = mode
+        
+        time.sleep(0.3)
+        msg_info = self.mqtt_client.publish("commands", "0", qos=1)
         self.unacked_publish.add(msg_info.mid)
         msg_info.wait_for_publish()
-        self.steering_mode = mode
+        time.sleep(0.2)
+
+        if mode == "auto":
+            parameter_string = ""
+            for parameter in parameters:
+                parameter_string += " " + str(parameter)
+
+            msg_info = self.mqtt_client.publish("commands", "2" + parameter_string, qos=1)
+            self.unacked_publish.add(msg_info.mid)
+            msg_info.wait_for_publish()
+
         return
 
     def update_GUI(self): 
@@ -133,7 +152,7 @@ class GUI(tk.Tk):
 
                 motor = clamp(-1.0, motor, 1.0)
 
-                msg_info = self.mqtt_client.publish("commands", str(servo_signal) + " "+ str(motor) + " " + "0", qos=1)
+                msg_info = self.mqtt_client.publish("commands", "1 " + str(servo_signal) + " "+ str(motor), qos=1)
                 self.unacked_publish.add(msg_info.mid)
 
                 msg_info.wait_for_publish()
@@ -155,7 +174,7 @@ class GUI(tk.Tk):
                     motor = 0
                     servo_signal = 0
 
-                msg_info = self.mqtt_client.publish("commands", str(servo_signal) + " "+ str(motor) + " " + "0", qos=1)
+                msg_info = self.mqtt_client.publish("commands", "1 " + str(servo_signal) + " "+ str(motor), qos=1)
                 self.unacked_publish.add(msg_info.mid)
 
                 msg_info.wait_for_publish()

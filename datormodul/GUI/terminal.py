@@ -24,11 +24,14 @@ class Terminal(tk.Frame):
 
         if command_list[0] == "exit":
             print("TERMINATING")
-            self.parent.stop_drive_data()
-            self.parent.destroy()
+            self.parent.exit()
             return
         elif command_list[0] == "mode" and len(command_list) > 1:
-            self.parent.change_driving_mode(command_list[1])
+            if len(command_list) > 3 and command_list[1] == "auto":
+                print("auto")
+                self.parent.change_driving_mode(command_list[1], (command_list[2], command_list[3]))
+            else:
+                self.parent.change_driving_mode(command_list[1])
         elif command_list[0] == "stop":
             self.parent.change_driving_mode("stop")
         elif command_list[0] == "start":
