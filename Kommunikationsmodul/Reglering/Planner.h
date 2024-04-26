@@ -8,13 +8,21 @@
 class Planner
 {
 public:
-    Planner(float x_start, float y_start, float start_angle,
-            float x_goal, float y_goal, float goal_angle,
-            int size=20, float min_radius = 400.f, float max_radius = 2000.f,
-            float minimum_scaled_speed = 0.1, float maximum_scaled_speed = 0.3)
-    : x_start{x_start}, y_start{y_start}, start_angle{start_angle},
-      x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, s {4,2}, calc_ref {}
+    Planner() = default;
+
+
+    void Update(float prev_x, float prev_y, float prev_angle,float next_x, float next_y, float next_angle)
     {
+        // set all the member variables
+        x_start = prev_x;
+        y_start = prev_y;
+        start_angle = prev_angle;
+        x_goal = next_x;
+        y_goal = next_y;
+        goal_angle = next_angle;
+        s = Eigen::MatrixXf(4,2);
+
+        
         //Matrix for calculations
         int k = 0;
 
@@ -90,6 +98,8 @@ public:
         //Is done when initalizing..
         calc_ref = std::make_unique<Calc_ref>(P,K, x_goal, y_goal, goal_angle);
     } 
+
+
     virtual ~Planner() 
     {}
 
@@ -169,18 +179,18 @@ private:
     float x_goal; 
     float y_goal; 
     float goal_angle;
-    int size;
+    int size = 20;
     Eigen::MatrixXf P;
     std::unique_ptr<Calc_ref> calc_ref;
     Eigen::MatrixXf K;
 
 
     Eigen::MatrixXf s;
-    float min_radius;
-    float max_radius;
+    float min_radius = 800.f;
+    float max_radius = 2000.f;
 
-    float minimum_scaled_speed;
-    float maximum_scaled_speed;
+    float minimum_scaled_speed = 0.1f;
+    float maximum_scaled_speed = 0.3f;
 };
 
 #endif /* PLANNER_H_ */

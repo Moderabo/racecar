@@ -45,6 +45,8 @@ int main(int argc, const char * argv[])
     // Initiate LiDAR
     Lidar lidar {};
 
+    Planner bezier{};
+
     uint64_t t {0};
     uint64_t tlast {0};
     int speed {0};
@@ -82,8 +84,8 @@ int main(int argc, const char * argv[])
                                    << next_gate.angle << '\n';
 
         // Route planning and calculation of 
-        Planner bezier {prev_gate.x, prev_gate.y, prev_gate.angle,
-                        next_gate.x, next_gate.y ,next_gate.angle};
+        bezier.Update(prev_gate.x, prev_gate.y, prev_gate.angle,
+                      next_gate.x, next_gate.y ,next_gate.angle);
 
         float angle_to_steer = bezier.getRefAngle(0, 0, 0);
 
