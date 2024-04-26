@@ -20,7 +20,7 @@ public:
 
         // base the number of points in the parameter curve on distance between gates
         float len = pow(pow(x_start-x_goal,2)+pow(y_start-y_goal,2),0.5f);
-        size = (1.3f*len)/70;
+        size = (len)/85;
         P = Eigen::MatrixXf(size+5,2); // here we add 5 points after the last gate
         K = Eigen::MatrixXf(size,1);
         Eigen::MatrixXf l(size,4);
