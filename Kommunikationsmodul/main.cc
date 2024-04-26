@@ -2,7 +2,6 @@
  *  RPi main script
  *
  */
-#include <Eigen/Dense>
 #include <iostream>
 #include <chrono>
 

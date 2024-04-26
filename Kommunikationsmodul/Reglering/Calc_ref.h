@@ -1,5 +1,7 @@
 #ifndef PURSUIT_H_
 #define PURSUIT_H_
+
+#include <Eigen/Dense>
 #include "PID.h"
 
 class Calc_ref{

@@ -1,6 +1,7 @@
 #ifndef PLANNER_H_
 #define PLANNER_H_
 
+#include <Eigen/Dense>
 #include <memory>
 
 #include "Calc_ref.h"
