@@ -112,7 +112,7 @@ public:
     
     float getRefAngle(float car_x, float car_y, float car_angle)
     {
-        return calc_ref->update_ref(size, car_x, car_y, car_angle);
+        return calc_ref->update_ref(size);
     }
 
     float getRefSpeed()

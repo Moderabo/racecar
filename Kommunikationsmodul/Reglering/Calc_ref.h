@@ -10,48 +10,45 @@ class Calc_ref{
     float K_p_offset_tangent = 0.1): 
     P{P}, K{K}, x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
     pid_c{0.5, {0.87154,6.84371,0,100,1,1}}, K_p_angle_to_goal{K_p_angle_to_goal},
-    K_p_offset_tangent{K_p_offset_tangent}
+    K_p_offset_tangent{K_p_offset_tangent}, look_ahead_dist{2}
     {
     }
     virtual ~Calc_ref()
     {}
 
-    float update_ref(int size,float car_x, float car_y, float car_angle)
+    float update_ref(int size)
     {
         float angle_from_tangent;
         float angle_to_goal;
 
         Eigen::VectorXf d_vec(size);
 
-        for(int n=0; n <= size-1; n++ ){
+        // here we should loop over all the points in the P vector (size + extra after gate)
+        for(int n=0; n < P.rows(); n++ ){
 
-            float  distance = pow(pow(car_x-P.coeff(n,0),2) + pow(car_y-P.coeff(n,1),2), 0.5);
+            float  distance = pow(pow(P.coeff(n,0),2) + pow(P.coeff(n,1),2), 0.5);
             d_vec.row(n) << distance;
         }
 
-        float XTE = d_vec.minCoeff(&index); //minimum distance to ref line, could be optimiced..
+        // calculate minimum distance to the line and get the corresponding index
+        float XTE = d_vec.minCoeff(&index);
 
-        Eigen::MatrixXf rot_M(2,2); //inverse of a rotation matrix in cars angle. 
-        //Make it independent on cordinate system.
-        rot_M.row(0) << cos(-car_angle), sin(-car_angle);
-        rot_M.row(1) << -sin(-car_angle), cos(-car_angle);
+        // calculate the angle to the look ahead point
+        angle_to_goal = atan2f(P.coeff(index + look_ahead_dist,1),P.coeff(index + look_ahead_dist,0));
 
-        Eigen::MatrixXf cords1(1,2);
-        cords1.row(0) << (P.coeff(index + size/10,0) - car_x), (P.coeff(index + size/10,1) - car_y);
-        cords1 = cords1 * rot_M; //1x2 matrix
-        angle_to_goal = angle(cords1.coeff(0,1),cords1.coeff(0,0));
-
-        Eigen::MatrixXf cords2(1,2);
-        cords2.row(0) << (P.coeff(index + size/10,0) - P.coeff(index,0)), (P.coeff(index + size/10,1) - P.coeff(index,1));
-        cords2 = cords2 * rot_M; //1x2 matrix
-        angle_from_tangent = angle(cords2.coeff(0,1),cords2.coeff(0,0));
+        // calculate the angle to the tangent
+        float x = P.coeff(index + 1,0) - P.coeff(index,0);
+        float y = P.coeff(index + 1,1) - P.coeff(index,1);
+        angle_from_tangent = atan2f(y,x);
 
         CTS = angle_from_tangent;
 
-        refrence_angle = K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS + car_angle;
+        // get the angle we should turn
+        refrence_angle = K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS;
 
-        return refrence_angle*9/(3.14); //*pid_c.update(refrence_angle, car_angle)
         //returns something normally between pi/9 scaled to [0,1] and if angle is bigger its capped later in main.
+        return refrence_angle*9/(3.14); //*pid_c.update(refrence_angle, car_angle)
+    
     }
 
     void set_K_p_angle_to_goal(float fraction)
@@ -62,10 +59,6 @@ class Calc_ref{
     void set_K_p_offset_tangent(float fraction)
     {
         K_p_offset_tangent = fraction;
-    }
-
-    float angle(float y, float x){     
-        return atan2f(y,x);
     }
 
     float get_refrence_angle()
@@ -94,6 +87,7 @@ class Calc_ref{
     float CTS;
     float refrence_angle;
     float angle_to_goal;
+    int look_ahead_dist;
 
     //Waypoints
     Eigen::MatrixXf P;
