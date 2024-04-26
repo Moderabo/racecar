@@ -14,7 +14,7 @@ public:
             float minimum_scaled_speed = 0.1, float maximum_scaled_speed = 0.3)
     : x_start{x_start}, y_start{y_start}, start_angle{start_angle},
       x_goal{x_goal}, y_goal{y_goal}, goal_angle{goal_angle}, 
-      size {size}, P {size,2}, s {4,2}, calc_ref {}, K {size,1}
+      size {size}, P {size+10,2}, s {4,2}, calc_ref {}, K {size,1}
     {
         //Matrix for calculations
         int k = 0;
@@ -40,6 +40,14 @@ public:
         }
 
         P = l * s; //Calculates the bezier curve
+
+        // Here we add the extra points after the gate
+        Eigen::MatrixXf Add_points(10,2);
+        for(int i = 1; i <= 10; i++)
+        {
+            Add_points.row(i-1) << (x_goal + 50*i*cos(goal_angle)), (y_goal + 50*i*sin(goal_angle));
+        }
+        P << Add_points;
 
         for(int t = 0; t < size; t++) 
         //Small code from https://github.com/reiniscimurs/Bezier-Curve/blob/main/Bezier.py
@@ -142,18 +150,10 @@ public:
     std::string getBezier_curve()
     {
         std::ostringstream ss;
-        Eigen::MatrixXf Copy_P(size+10,2);
-        Eigen::MatrixXf Add_points(10,2);
-        for(int i = 1; i <= 10; i++)
+;            
+        for(int i {0};i< size + 10; i++)
         {
-            Add_points.row(i-1) << (x_goal + 50*i*cos(goal_angle)), (y_goal + 50*i*sin(goal_angle));
-        }
-
-        Copy_P << P, Add_points;
-            
-        for(int i {0};i<= size + 10-1; i++)
-        {
-             ss << Copy_P.coeff(i,0) << "," << Copy_P.coeff(i,1) << ";";
+             ss << P.coeff(i,0) << "," << P.coeff(i,1) << ";";
         }
 
         return ss.str();

@@ -36,36 +36,15 @@ class Calc_ref{
         rot_M.row(0) << cos(-car_angle), sin(-car_angle);
         rot_M.row(1) << -sin(-car_angle), cos(-car_angle);
 
-        if(index + size/10 < size){
+        Eigen::MatrixXf cords1(1,2);
+        cords1.row(0) << (P.coeff(index + size/10,0) - car_x), (P.coeff(index + size/10,1) - car_y);
+        cords1 = cords1 * rot_M; //1x2 matrix
+        angle_to_goal = angle(cords1.coeff(0,1),cords1.coeff(0,0));
 
-            Eigen::MatrixXf cords1(1,2);
-            cords1.row(0) << (P.coeff(index + size/10,0) - car_x), (P.coeff(index + size/10,1) - car_y);
-            cords1 = cords1 * rot_M; //1x2 matrix
-            angle_to_goal = angle(cords1.coeff(0,1),cords1.coeff(0,0));
-
-
-            Eigen::MatrixXf cords2(1,2);
-            cords2.row(0) << (P.coeff(index + size/10,0) - P.coeff(index,0)), (P.coeff(index + size/10,1) - P.coeff(index,1));
-            cords2 = cords2 * rot_M; //1x2 matrix
-            angle_from_tangent = angle(cords2.coeff(0,1),cords2.coeff(0,0));
-
-        //Later kolla snär kurva här med true/false!!!!
-        }else if (index + size/10 >= size) //If car are close to the goal set new goal point further away.
-        {
-            Eigen::MatrixXf Copy_P(size+10,2);
-            Eigen::MatrixXf Add_points(10,2);
-            for(int i = 1; i <= 10; i++)
-            {
-                Add_points.row(i-1) << (x_goal + 50*i*cos(goal_angle)), (y_goal + 50*i*sin(goal_angle));
-            }
-            Copy_P << P, Add_points;
-
-            Eigen::MatrixXf cords1(1,2);
-            cords1.row(0) << (Copy_P.coeff(index + size/10,0) - car_x), (Copy_P.coeff(index + size/10,1) - car_y);
-            cords1 = cords1 * rot_M; //1x2 matrix
-            angle_to_goal = angle(cords1.coeff(0,1),cords1.coeff(0,0));
-            angle_from_tangent = 0; //close to gate anyway..
-        }
+        Eigen::MatrixXf cords2(1,2);
+        cords2.row(0) << (P.coeff(index + size/10,0) - P.coeff(index,0)), (P.coeff(index + size/10,1) - P.coeff(index,1));
+        cords2 = cords2 * rot_M; //1x2 matrix
+        angle_from_tangent = angle(cords2.coeff(0,1),cords2.coeff(0,0));
 
         CTS = angle_from_tangent;
 
