@@ -44,7 +44,7 @@ bool validGate(Cone &cone1, Cone &cone2)
     // calculate the distance of the space between two cones 
     float gate_dist_squared { x*x + y*y - cone1.r*cone1.r - cone2.r*cone2.r };
 
-    return gate_dist_squared < 750*750;
+    return gate_dist_squared < 800*800;
 }
 
 
@@ -99,14 +99,14 @@ std::pair<AltGate,AltGate> findPrevNextGate(std::vector<AltGate> &gates)
     if ( closest_prev_gate > 1e29 )
     {
         // If no previous is found, add one behind of the car
-        AltGate prev_gate {0, -1e3, 0};
+        AltGate prev_gate {-1e3, 0, 0};
         prev_next_gate.second = prev_gate;
     }
     // Check if a next gate is found
     if ( closest_next_gate > 1e29 )
     {
         // If no next is found, add one in front of the car
-        AltGate next_gate {0, 1e3, 0};
+        AltGate next_gate {1e3, 0, 0};
         prev_next_gate.first = next_gate;
     }
 
