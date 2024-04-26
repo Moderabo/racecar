@@ -72,11 +72,13 @@ int main(int argc, const char * argv[])
                 case 0:  // Idle
                     lidar.stop();
                     i2c_connection.steer(0);
+                    sleep(0.05);
                     i2c_connection.gas(0);
                     break;
                 case 1:  // Manual
                     lidar.start();
                     i2c_connection.steer(commands.at(1));
+                    sleep(0.05);
                     i2c_connection.gas(commands.at(2));
                     break;
                 case 2:  // Automatic
@@ -85,6 +87,7 @@ int main(int argc, const char * argv[])
                 default:
                     lidar.stop();
                     i2c_connection.steer(0);
+                    sleep(0.05);
                     i2c_connection.gas(0);
                     break;
             }
@@ -132,7 +135,7 @@ int main(int argc, const char * argv[])
 
             i2c_connection.steer(angle_to_steer);
             sleep(0.05);
-            i2c_connection.gas(bezier.getRefSpeed);
+            i2c_connection.gas(bezier.getRefSpeed());
             sleep(0.01);
         }
 
