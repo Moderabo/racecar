@@ -121,28 +121,23 @@ int main(int argc, const char * argv[])
             AltGate next_gate { prev_next_gate.second };
 
             // Route planning and calculation of
-            Planner bezier {prev_gate.x, prev_gate.y, prev_gate.angle,
-                            next_gate.x, next_gate.y ,next_gate.angle};
+            bezier.update(prev_gate.x, prev_gate.y, prev_gate.angle,
+                          next_gate.x, next_gate.y ,next_gate.angle);
 
             mqtt_connection.pubCones(cones);
             mqtt_connection.pubBezier(bezier.getBezier_points());
             mqtt_connection.pubCurve(bezier.getBezier_curve());
 
-            // Automatic: steer and gas
-            if ( state == 2 )
-            {
-                float angle_to_steer = bezier.getRefAngle(0, 0, 0);
-                angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
-                float gas = std::max(-1.f, std::min(1.2f*bezier.getRefSpeed(), 1.f));
+            float angle_to_steer = bezier.getRefAngle(0, 0, 0);
+            angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
 
-                i2c_connection.steer(angle_to_steer);
-                sleep(0.05);
-                i2c_connection.gas(bezier.getRefSpeed());
-                sleep(0.01);
-                int speed = i2c_connection.getSpeed();
-                sleep(0.01);
-                mqtt_connection.pubSpeed( t, speed );
-            }
+            i2c_connection.steer(angle_to_steer);
+            sleep(0.05);
+            i2c_connection.gas(bezier.getRefSpeed());
+            sleep(0.01);
+            int speed = i2c_connection.getSpeed();
+            sleep(0.01);
+            mqtt_connection.pubSpeed( t, speed );
         }
     }
     return 0;

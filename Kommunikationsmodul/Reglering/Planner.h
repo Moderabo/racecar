@@ -12,7 +12,7 @@ public:
     Planner() = default;
 
 
-    void Update(float prev_x, float prev_y, float prev_angle,float next_x, float next_y, float next_angle)
+    void update(float prev_x, float prev_y, float prev_angle,float next_x, float next_y, float next_angle)
     {
         // set all the member variables
         x_start = prev_x;
@@ -190,8 +190,8 @@ private:
     float min_radius = 800.f;
     float max_radius = 2000.f;
 
-    float minimum_scaled_speed = 0.1f;
-    float maximum_scaled_speed = 0.3f;
+    float minimum_scaled_speed = 0.15f;
+    float maximum_scaled_speed = 0.45;
 };
 
 #endif /* PLANNER_H_ */
