@@ -21,9 +21,9 @@ struct Cone
 
 typedef std::vector<Point> Cluster;
 
-typedef std::pair<Cone,Cone> Gate;
+typedef std::pair<Cone,Cone> ConePair;
 
-struct AltGate
+struct Gate
 {
     float x;
     float y;
@@ -31,16 +31,16 @@ struct AltGate
 };
 
 
-AltGate convertGate(Gate &gate);
+Gate convertGate(ConePair &);
 
 
 bool validGate(Cone &cone1, Cone &cone2);
 
 
-std::vector<AltGate> findGates(std::vector<Cone> &cones);
+std::vector<Gate> findGates(std::vector<Cone> &cones);
 
 
-std::pair<AltGate,AltGate> findPrevNextGate(std::vector<AltGate> &gates);
+std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates);
 
 
 void saveClusters(std::vector<Cluster> &clusters);
@@ -49,7 +49,7 @@ void saveClusters(std::vector<Cluster> &clusters);
 void saveCones(std::vector<Cone> &cones);
 
 
-void saveGates(std::vector<Gate> &gates);
+void saveGates(std::vector<ConePair> &);
 
 #endif
 

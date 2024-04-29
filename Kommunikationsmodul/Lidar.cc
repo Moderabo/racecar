@@ -88,7 +88,9 @@ void Lidar::update()
 
     if ( (p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y) < 200.f*200.f )
     {
-        clusters.front().insert(clusters.front().begin(), clusters.back().begin(), clusters.back().end());
+        clusters.front().insert(clusters.front().begin(),
+                                clusters.back().begin(),
+                                clusters.back().end());
         clusters.pop_back();
     }
 
@@ -135,7 +137,7 @@ void Lidar::filter()
 
 void Lidar::findCones()
 {
-	// Create cones from clusters filtering out to large objects
+	// Create cones from clusters filtering out too large objects
 	for (auto cluster : clusters)
 	{
         // Calculate midpoint and radius from first and last point in cluster
@@ -151,7 +153,7 @@ void Lidar::findCones()
 			continue;
 		}
         // Large cone
-        else if ( r > ( 120 + 20 + 10 ) / 2 )
+        else if ( r > ( 120 + 20 ) / 2 )
         {
             r = 190;
         }

@@ -115,16 +115,16 @@ int main(int argc, const char * argv[])
             //saveCones(cones);
 
             // Find all valid gates
-            std::vector<AltGate> gates;
+            std::vector<Gate> gates;
             gates = findGates(cones);
             //saveGates(gates);
 
             // Find previous and next gate
-            std::pair<AltGate,AltGate> prev_next_gate;
+            std::pair<Gate,Gate> prev_next_gate;
             prev_next_gate = findPrevNextGate(gates);
 
-            AltGate prev_gate { prev_next_gate.first };
-            AltGate next_gate { prev_next_gate.second };
+            Gate prev_gate { prev_next_gate.first };
+            Gate next_gate { prev_next_gate.second };
 
             // Route planning and calculation of
             bezier.update(prev_gate.x, prev_gate.y, prev_gate.angle,
