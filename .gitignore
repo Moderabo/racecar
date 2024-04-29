@@ -5,3 +5,6 @@
 *.pyc
 *.vscode
 *.d
+*.txt
+env
+venv

@@ -8,9 +8,6 @@ Lidar::Lidar(): clusters {}, cones {}, op_result {},
 {
     lidar->connect(*channel);
 
-    // start scan...
-    lidar->startScan(false,true);
-
     //lidar->setMotorSpeed(200);
 }
 
@@ -18,6 +15,17 @@ Lidar::~Lidar()
 {
     lidar->stop();
     delete lidar;
+}
+
+void Lidar::start()
+{
+    // start scan...
+    lidar->startScan(false,true);
+}
+
+void Lidar::stop()
+{
+    lidar->stop();
 }
 
 
