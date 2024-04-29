@@ -10,8 +10,8 @@ Gate convertGate(ConePair &cone_pair)
     float x1 { cone_pair.second.x };
     float y1 { cone_pair.second.y };
     // Vector from 0 to 1 cone
-    float x01 { (x1 - x0) / sqrt((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)) };
-    float y01 { (y1 - y0) / sqrt((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)) };
+    float x01 { (x1 - x0) / sqrtf((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)) };
+    float y01 { (y1 - y0) / sqrtf((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)) };
 
     Gate gate;
     // Calculate midpoint of the space between cones and not from cone midpoint
@@ -88,8 +88,8 @@ std::vector<Gate> findGates(std::vector<Cone> &cones)
         {
             if ( validGate(*cone1, *cone2) )
             {
-                Gate gate {*cone1, *cone2};
-                gates.push_back(convertGate(gate));
+                ConePair cone_pair {*cone1, *cone2};
+                gates.push_back(convertGate(cone_pair));
             }
         }
     }
