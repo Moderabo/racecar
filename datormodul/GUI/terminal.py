@@ -27,10 +27,15 @@ class Terminal(tk.Frame):
             self.parent.exit()
             return
         elif command_list[0] == "mode" and len(command_list) > 1:
-            if len(command_list) > 3 and command_list[1] == "auto":
-                print("auto")
-                self.parent.change_driving_mode(command_list[1], (command_list[2], command_list[3]))
+            if len(command_list) > 7 and command_list[1] == "auto":
+                argument_list = []
+                for argument in command_list[2:8]:
+                    argument_list.append(argument)
+                argument_list = tuple(argument_list)
+                #print(argument_list)
+                self.parent.change_driving_mode(command_list[1], argument_list)
             else:
+                #info_to_print = "Not enough parameters. Using defaults instead."
                 self.parent.change_driving_mode(command_list[1])
         elif command_list[0] == "stop":
             self.parent.change_driving_mode("stop")

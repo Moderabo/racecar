@@ -107,7 +107,7 @@ class GUI(tk.Tk):
     def click_event(self, event):
         event.widget.focus_set()
 
-    def change_driving_mode(self, mode, parameters = (0.3, 0.1, 800, 2000, 0.5, 0.35)):
+    def change_driving_mode(self, mode, parameters = (0.5, 0.15, 800, 1500, 0.45, 0.05)):
         if self.steering_mode == "stop":
             self.mqtt_client.loop_start()
         self.steering_mode = mode
