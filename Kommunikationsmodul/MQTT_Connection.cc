@@ -1,4 +1,3 @@
-
 #include "MQTT_Connection.h"
 
 
@@ -62,14 +61,26 @@ std::vector<float> MQTT_Connection::receiveMsg()
 
 	std::string commands;
 	std::vector<float> commands_value_list;
-
-	auto msg = m_cli.consume_message();
-
-        if (!msg)
+	//Takes latest message from que if there is any.
+	auto msg = m_cli.try_consume_message_for(std::chrono::seconds(0));
+	if (!msg)
         {
-		return  commands_value_list;
+                return  commands_value_list;
+        }
+
+	// Clears message que.
+	while(true)
+	{
+	 	auto tmp_msg = m_cli.try_consume_message_for(std::chrono::seconds(0));
+		if (!tmp_msg)
+        	{
+                	break;
+       		}
+		msg = tmp_msg;
 	}
 
+
+	//Converts message to float commands:
 	std::stringstream test(msg->to_string());
 
 	while(std::getline(test, commands, ' '))
@@ -98,14 +109,13 @@ void MQTT_Connection::pubCones(std::vector<Cone> &cones)
         {
 		payload = payload + std::to_string(cone.x) + "," + std::to_string(cone.y ) + "," + std::to_string(cone.r) + ";" ;
 	}
-
         m_conesTopic.publish(payload);
 }
 
 void MQTT_Connection::pubBezier(std::string msg)
 {
         // Publishes Bezier points.
-	std::cout << "Points: " << msg << '\n';
+	//std::cout << "Points: " << msg << '\n';
 
         m_bezierTopic.publish(msg);
 }
@@ -113,6 +123,6 @@ void MQTT_Connection::pubBezier(std::string msg)
 void MQTT_Connection::pubCurve(std::string msg)
 {
         // Publishes all curve points.
-	std::cout << "Curve: " << msg << '\n';
+	//std::cout << "Curve: " << msg << '\n';
         m_curveTopic.publish(msg);
 }

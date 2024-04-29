@@ -29,6 +29,8 @@ public:
     Lidar();
     ~Lidar();
 
+    void start();
+    void stop();
     void update();
     std::vector<Cluster> getPoints();
     std::vector<Cone> getCones();
