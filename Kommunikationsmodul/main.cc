@@ -134,15 +134,12 @@ int main(int argc, const char * argv[])
             mqtt_connection.pubBezier(bezier.getBezier_points());
             mqtt_connection.pubCurve(bezier.getBezier_curve());
 
-            float angle_to_steer = bezier.getRefAngle(0, 0, 0);
+            float angle_to_steer = next_gate.type; //bezier.getRefAngle(0, 0, 0);
             angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
 
             i2c_connection.steer(angle_to_steer);
-            sleep(0.05);
             i2c_connection.gas(bezier.getRefSpeed());
-            sleep(0.01);
             int speed = i2c_connection.getSpeed();
-            sleep(0.01);
             mqtt_connection.pubSpeed( t, speed );
         }
     }

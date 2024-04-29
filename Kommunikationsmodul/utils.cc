@@ -37,6 +37,32 @@ Gate convertGate(ConePair &cone_pair)
         gate.angle = -M_PI / 2 + theta;
     }
 
+    if ( cone_pair.first.r == 12 && cone_pait.second.r == 12 )
+    {
+        gate.type = 0;
+    }
+    else if ( cone_pair.first.r == 19 && cone_pait.second.r == 19 )
+    {
+        gate.type = 2;
+    {
+    else
+    {
+        float xgc { cone_pair.first.x - gate.x };
+        float ygc { cone_pair.first.y - gate.y };
+        float xg { -gate.y };
+        float yg { gate.x };
+        bool left_cone { xgc * xg + ygc * yg > 0 };
+
+        if ( left_cone && cone_pair.first.r == 12 )
+        {
+            gate.type = -1;
+        }
+        else
+        {
+            gate.type = 1;
+        }
+    }
+    
     return gate;
 }
 

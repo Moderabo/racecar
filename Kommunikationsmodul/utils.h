@@ -28,6 +28,7 @@ struct Gate
     float x;
     float y;
     float angle;
+    int type;  // 0: ordinairy, -1: right, 1:left, 2: start
 };
 
 
