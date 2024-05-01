@@ -9,6 +9,7 @@ import xbox
 import read_keyboard
 import paho.mqtt.client as client
 import information
+import interactions
 from datetime import datetime
 
 
@@ -35,6 +36,7 @@ class GUI(tk.Tk):
         self.path_widget = path_overview.PathOverview(self)
         self.terminal_widget = terminal.Terminal(self)
         self.data_widget = data_overview.DataOverview(self)
+        self.input_widget = interactions.Interactions(self)
         #============================
 
         #=====Set up MQTT client=====
@@ -65,12 +67,18 @@ class GUI(tk.Tk):
 
         self.bind("<Button-1>", self.click_event)
 
+        self.date_format_file = ""
+
     def __del__(self):
         os.system(f'''cmd /c "netsh wlan connect name=eduroam"''')
         return
 
     def exit(self):
-        self.change_driving_mode("stop")
+        print("TERMINATING")
+        try:
+            self.change_driving_mode("stop")
+        except:
+            print("Not connected")
         self.stop_drive_data()
         self.destroy()
 
@@ -84,19 +92,31 @@ class GUI(tk.Tk):
             return
         self.currently_writing_to_file = False
         self.mqtt_commands.close_file()
+
+        self.terminal_widget.text_area_terminal.config(state="normal")
+        self.terminal_widget.text_area_terminal.insert("end", f"\nStopped recording. File saved as {self.date_format_file}.txt" )
+        self.terminal_widget.text_area_terminal.config(state="disabled")
+        self.terminal_widget.text_area_terminal.see("end")
         return
 
     def record_drive_data(self):
         if self.currently_writing_to_file == True:
             self.terminal_widget.text_area_terminal.config(state="normal")
-            self.terminal_widget.text_area_terminal.insert("end", "\nError: Already writing.")
+            self.terminal_widget.text_area_terminal.insert("end", "\nError: Already recording.")
             self.terminal_widget.text_area_terminal.config(state="disabled")
             self.terminal_widget.text_area_terminal.see("end")
             return
+        
         self.currently_writing_to_file = True
         now = datetime.now()
-        date_format = now.strftime("%Y-%m-%d_%H-%M-%S")
-        self.mqtt_commands.create_file(date_format + ".txt")
+        self.date_format_file = now.strftime("%Y-%m-%d_%H-%M-%S")
+        self.mqtt_commands.create_file(self.date_format_file + ".txt")
+
+        date_format_terminal = now.strftime("%Y-%m-%d %H:%M:%S")
+        self.terminal_widget.text_area_terminal.config(state="normal")
+        self.terminal_widget.text_area_terminal.insert("end", f"\nBegan recording at {date_format_terminal}." )
+        self.terminal_widget.text_area_terminal.config(state="disabled")
+        self.terminal_widget.text_area_terminal.see("end")
         return
 
     def setup_mqtt_protocol(self):
@@ -107,7 +127,7 @@ class GUI(tk.Tk):
     def click_event(self, event):
         event.widget.focus_set()
 
-    def change_driving_mode(self, mode, parameters = (0.5, 0.15, 800, 1500, 0.45, 0.05)):
+    def change_driving_mode(self, mode, parameters = information.parameters):
         if self.steering_mode == "stop":
             self.mqtt_client.loop_start()
         self.steering_mode = mode
@@ -132,6 +152,7 @@ class GUI(tk.Tk):
     def update_GUI(self): 
         self.data_widget.update()
         self.path_widget.update()
+        self.input_widget.update()
         self.after(10, self.update_GUI)
 
     def steering(self):

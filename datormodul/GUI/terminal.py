@@ -23,7 +23,6 @@ class Terminal(tk.Frame):
         info_to_print = ""
 
         if command_list[0] == "exit":
-            print("TERMINATING")
             self.parent.exit()
             return
         elif command_list[0] == "mode" and len(command_list) > 1:
