@@ -155,12 +155,12 @@ void Lidar::findCones()
         // Large cone
         else if ( r > ( 120 + 20 ) / 2 )
         {
-            r = 190;
+            r = 190.f / 2;
         }
         // Small cone
         else
         {
-            r = 120;
+            r = 120.f / 2;
         }
 
 		Cone cone;
