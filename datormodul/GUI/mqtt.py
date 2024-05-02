@@ -48,6 +48,7 @@ class Mqtt():
     def on_message(self, client, userdata, message):
         # userdata is the structure we choose to provide, here it's a list()
         if message.topic == "commands":
+            return
             message.payload = message.payload.decode("utf-8")
             information.data_list.append(message.payload)
             information.data_list.pop(0)
@@ -55,7 +56,10 @@ class Mqtt():
 
         elif message.topic == "data":
             message.payload = message.payload.decode("utf-8")
+            information.data_list.append(message.payload)
+            information.data_list.pop(0)
             self.write_to_file("Vel: " + message.payload)
+
 
         elif message.topic == "cones":
             message.payload = message.payload.decode("utf-8")

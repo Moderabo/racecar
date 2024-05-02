@@ -23,12 +23,19 @@ class Terminal(tk.Frame):
         info_to_print = ""
 
         if command_list[0] == "exit":
-            print("TERMINATING")
-            self.parent.stop_drive_data()
-            self.parent.destroy()
+            self.parent.exit()
             return
         elif command_list[0] == "mode" and len(command_list) > 1:
-            self.parent.change_driving_mode(command_list[1])
+            if len(command_list) > 7 and command_list[1] == "auto":
+                argument_list = []
+                for argument in command_list[2:8]:
+                    argument_list.append(argument)
+                argument_list = tuple(argument_list)
+                #print(argument_list)
+                self.parent.change_driving_mode(command_list[1], argument_list)
+            else:
+                #info_to_print = "Not enough parameters. Using defaults instead."
+                self.parent.change_driving_mode(command_list[1])
         elif command_list[0] == "stop":
             self.parent.change_driving_mode("stop")
         elif command_list[0] == "start":

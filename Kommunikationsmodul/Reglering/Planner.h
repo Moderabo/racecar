@@ -11,8 +11,7 @@ class Planner
 public:
     Planner() = default;
 
-
-    void Update(float prev_x, float prev_y, float prev_angle,float next_x, float next_y, float next_angle)
+    void update(float prev_x, float prev_y, float prev_angle,float next_x, float next_y, float next_angle)
     {
         // set all the member variables
         x_start = prev_x;
@@ -98,6 +97,8 @@ public:
 
         //Is done when initalizing..
         calc_ref = std::make_unique<Calc_ref>(P,K, x_goal, y_goal, goal_angle);
+        calc_ref->set_K_p_angle_to_goal(K_p_angle_to_goal);
+        calc_ref->set_K_p_offset_tangent(K_p_offset_tangent);
     } 
 
 
@@ -136,12 +137,12 @@ public:
 
     void set_K_p_angle_to_goal(float fraction)
     {
-        calc_ref->set_K_p_angle_to_goal(fraction);
+        K_p_angle_to_goal = fraction;
     }
 
     void set_K_p_offset_tangent(float fraction)
     {
-        calc_ref->set_K_p_offset_tangent(fraction);
+        K_p_offset_tangent = fraction;
     }
 
     std::string getBezier_points()
@@ -180,6 +181,8 @@ private:
     float x_goal; 
     float y_goal; 
     float goal_angle;
+    float K_p_angle_to_goal;
+    float K_p_offset_tangent;
     int size = 20;
     Eigen::MatrixXf P;
     std::unique_ptr<Calc_ref> calc_ref;
@@ -190,8 +193,8 @@ private:
     float min_radius = 800.f;
     float max_radius = 2000.f;
 
-    float minimum_scaled_speed = 0.1f;
-    float maximum_scaled_speed = 0.3f;
+    float minimum_scaled_speed = 0.15f;
+    float maximum_scaled_speed = 0.45;
 };
 
 #endif /* PLANNER_H_ */
