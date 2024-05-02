@@ -33,7 +33,7 @@ class Calc_ref{
         // calculate minimum distance to the line and get the corresponding index
         float XTE = d_vec.minCoeff(&index);
 
-        // calculate the angle to the look ahead point
+        // calculate the angle to the look ahead point 
         angle_to_goal = atan2f(-P.coeff(index + look_ahead_dist,1),P.coeff(index + look_ahead_dist,0));
 
         // calculate the angle to the tangent
