@@ -31,6 +31,7 @@ public:
         size = (len)/85;
         P = Eigen::MatrixXf(size+5,2); // here we add 5 points after the last gate
         K = Eigen::MatrixXf(size,1);
+        R = Eigen::MatrixXf(size,1);
         Eigen::MatrixXf l(size,4);
 
         //Position in s matrix
