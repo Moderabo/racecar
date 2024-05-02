@@ -65,11 +65,11 @@ public:
         //Derivation and second Derivation of the Bezier curve to calculate the curvature in each point
         {
             float step = t / size;
-            float x_d = 3*(pow((1-step),2))*(s.coeff(1,0) - P.coeff(0,0)) + 
+            float x_d = 3*(pow((1-step),2))*(s.coeff(1,0) - s.coeff(0,0)) + 
                 6*(1-step)*(step)*(s.coeff(2,0)-s.coeff(1,0)) +
                 3*(pow(step,2))*(s.coeff(3,0) - s.coeff(2.0));
 
-            float y_d = 3*(pow((1-step),2))*(s.coeff(1,1) - P.coeff(0,1)) + 
+            float y_d = 3*(pow((1-step),2))*(s.coeff(1,1) - s.coeff(0,1)) + 
                 6*(1-step)*(step)*(s.coeff(2,1)-s.coeff(1,1)) +
                 3*(pow(step,2))*(s.coeff(3,1) - s.coeff(2,1));
 
@@ -80,16 +80,16 @@ public:
                 6*(step)*(s.coeff(3,1) -2*s.coeff(2,1) + s.coeff(1,1));
             //absolute value... 
             float scaled_speed = 0.1 ; // max steering is 0.5
-            //Calculation of the radius of the curve.
+            //Calculation of the radius of the curve. 4577
             float k = pow(pow(   (x_d*y_dd - y_d*x_dd)/(pow( (pow(x_d,2.f) + pow(y_d,2.f)) ,3.f/2.f))     ,2),0.5f);
 
-            /*
+            
             std::cout << x_d << std::endl;
             std::cout << y_d << std::endl;
             std::cout << x_dd << std::endl;
             std::cout << y_dd << std::endl;
             std::cout << k << std::endl;
-            */
+            
 
             if(k <= min_radius){
                 scaled_speed = minimum_scaled_speed;
