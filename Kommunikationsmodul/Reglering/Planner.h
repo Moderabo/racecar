@@ -80,7 +80,8 @@ public:
                 6*(step)*(s.coeff(3,1) -2*s.coeff(2,1) + s.coeff(1,1));
             //absolute value... 
             float scaled_speed = 0.1 ; // max steering is 0.5
-            float k = pow(pow((x_d*y_dd - y_d*x_dd)/(pow( (pow(x_d,2) + pow(y_d,2)) ,3.f/2.f)),2),0.5);
+            //Calculation of the radius of the curve.
+            float k = pow(pow(   (x_d*y_dd - y_d*x_dd)/(pow( (pow(x_d,2f) + pow(y_d,2f)) ,3.f/2.f))     ,2),0.5f);
 
             if(k <= min_radius){
                 scaled_speed = minimum_scaled_speed;
