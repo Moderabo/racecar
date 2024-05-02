@@ -70,7 +70,7 @@ public:
         for(int t = 0; t < size; t++) 
         //Derivation and second Derivation of the Bezier curve to calculate the curvature in each point
         {
-            float step = t / size + 5;
+            float step = t / (size*1.0f);
             float a = s.coeff(0,0);
             float b = s.coeff(1,0);
             float c = s.coeff(2,0);
