@@ -85,9 +85,9 @@ public:
             float scaled_speed = 0.1 ; // max steering is 0.5
             float k = pow(pow(      (x_d*y_dd - y_d*x_dd)/(pow(  (pow(x_d,2.f) + pow(y_d,2.f))   ,3.f/2.f))    ,2.f),0.5f);
 
-            if(k <= min_radius){
+            if(1/k <= min_radius){
                 scaled_speed = minimum_scaled_speed;
-            }else if ( k>= max_radius)
+            }else if ( 1/k>= max_radius)
             {
                 scaled_speed = maximum_scaled_speed; 
             }else{
@@ -96,7 +96,7 @@ public:
  
             K.row(t) << scaled_speed;
 
-            std::cout << k << std::endl;
+            std::cout << 1/k << std::endl;
             std::cout << x_d << std::endl;
             std::cout << y_d << std::endl;
             std::cout << x_dd << std::endl;
