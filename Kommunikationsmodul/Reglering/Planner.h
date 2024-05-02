@@ -30,8 +30,8 @@ public:
         float len = pow(pow(x_start-x_goal,2)+pow(y_start-y_goal,2),0.5f);
         size = (len)/85;
         P = Eigen::MatrixXf(size+5,2); // here we add 5 points after the last gate
-        K = Eigen::MatrixXf(size,1);
-        R = Eigen::MatrixXf(size,1);
+        K = Eigen::MatrixXf(size+5,1); //MÅSTE FIXA MED DE EXTA 5 PUNKTERNA!!!
+        R = Eigen::MatrixXf(size+5,1);
         Eigen::MatrixXf l(size,4);
 
         //Position in s matrix
@@ -55,16 +55,22 @@ public:
         }
         // Here we add the extra points after the gate
         Eigen::MatrixXf Add_points(P.rows() - size,2);
+        Eigen::MatrixXf Add_points1(K.rows() - size,2);
+        Eigen::MatrixXf Add_points2(R.rows() - size,2); //test
         for(int i = 1; i <= P.rows()-size; i++)
         {
             Add_points.row(i-1) << (x_goal + 100*i*cos(goal_angle)), (y_goal + 100*i*sin(goal_angle));
+            Add_points1.row(i-1) = minimum_scaled_speed;
+            Add_points2.row(i-1) = min_radius;
+
+
         }
         P << l*s,  Add_points;
-
+        
         for(int t = 0; t < size; t++) 
         //Derivation and second Derivation of the Bezier curve to calculate the curvature in each point
         {
-            float step = t / size;
+            float step = t / size + 5;
             float a = s.coeff(0,0);
             float b = s.coeff(1,0);
             float c = s.coeff(2,0);
@@ -99,7 +105,11 @@ public:
             R.row(t) << 1/k;
         }
 
-        std::cout << R << std::endl;
+        K << Add_points1;
+        R << Add_points2;
+
+        std::cout << "R = " << R << std::endl;
+        std::cout << "K = " << K << std::endl;
 
         //Is done when initalizing..
         calc_ref = std::make_unique<Calc_ref>(P,K, x_goal, y_goal, goal_angle);
