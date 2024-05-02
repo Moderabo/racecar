@@ -55,13 +55,13 @@ public:
         }
         // Here we add the extra points after the gate
         Eigen::MatrixXf Add_points(P.rows() - size,2);
-        Eigen::MatrixXf Add_points1(K.rows() - size,2);
-        Eigen::MatrixXf Add_points2(R.rows() - size,2); //test
+        Eigen::MatrixXf Add_points1(K.rows() - size,1);
+        Eigen::MatrixXf Add_points2(R.rows() - size,1); //test
         for(int i = 1; i <= P.rows()-size; i++)
         {
             Add_points.row(i-1) << (x_goal + 100*i*cos(goal_angle)), (y_goal + 100*i*sin(goal_angle));
-            Add_points1.row(i-1) = minimum_scaled_speed;
-            Add_points2.row(i-1) = min_radius;
+            Add_points1.row(i-1) << minimum_scaled_speed;
+            Add_points2.row(i-1) << min_radius;
 
 
         }
@@ -98,15 +98,15 @@ public:
             {
                 scaled_speed = maximum_scaled_speed; 
             }else{
-                scaled_speed = minimum_scaled_speed + (maximum_scaled_speed - minimum_scaled_speed)*(k-min_radius)/max_radius; //räta linkens ekvation
+                scaled_speed = minimum_scaled_speed + (maximum_scaled_speed - minimum_scaled_speed)*(1/k-min_radius)/max_radius; //räta linkens ekvation
             }
  
             K.row(t) << scaled_speed;
             R.row(t) << 1/k;
         }
 
-        K << Add_points1;
-        R << Add_points2;
+        K = K , Add_points1;
+        R = R , Add_points2;
 
         std::cout << "R = " << R << std::endl;
         std::cout << "K = " << K << std::endl;
