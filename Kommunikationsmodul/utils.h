@@ -19,6 +19,16 @@ struct Cone
     float r;
 };
 
+// this struct (mby class?) should represent every individual segment of the track
+struct segment
+{   
+    // if special typ of segment
+    int id;
+
+    // here we should have some way of representing the points that define the bezier point
+
+};
+
 typedef std::vector<Point> Cluster;
 
 typedef std::pair<Cone,Cone> ConePair;
@@ -37,6 +47,7 @@ Gate convertGate(ConePair &);
 
 bool validGate(Cone &cone1, Cone &cone2);
 
+bool isInGate(Gate prev, Gate next);
 
 std::vector<Gate> findGates(std::vector<Cone> &cones);
 

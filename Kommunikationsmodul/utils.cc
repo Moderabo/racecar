@@ -79,6 +79,14 @@ bool validGate(Cone &cone1, Cone &cone2)
 }
 
 
+bool isInGate(Gate prev, Gate next)
+{
+    if ((prev.x*prev.x+prev.y*prev.y < 250*250 ) || (next.x*next.x+next.y*next.y < 250*250 ))  
+        return true;
+
+    return false;
+}
+
 std::vector<Gate> findGates(std::vector<Cone> &cones)
 {
     std::vector<Gate> gates {};
