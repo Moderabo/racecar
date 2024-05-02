@@ -34,20 +34,20 @@ class Calc_ref{
         float XTE = d_vec.minCoeff(&index);
 
         // calculate the angle to the look ahead point 
-        angle_to_goal = atan2f(-P.coeff(index + look_ahead_dist,1),P.coeff(index + look_ahead_dist,0));
+        angle_to_goal = atan2f(P.coeff(index + look_ahead_dist,1),P.coeff(index + look_ahead_dist,0));
 
         // calculate the angle to the tangent
         float x = P.coeff(index + 1,0) - P.coeff(index,0);
         float y = P.coeff(index + 1,1) - P.coeff(index,1);
-        angle_from_tangent = atan2f(-y,x);
+        angle_from_tangent = atan2f(y,x);
 
         CTS = angle_from_tangent;
 
         // get the angle we should turn
         refrence_angle = K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS;
 
-        //returns something normally between pi/9 scaled to [0,1] and if angle is bigger its capped later in main.
-        return refrence_angle*9/(3.14); //*pid_c.update(refrence_angle, car_angle)
+        //returns something normally between pi/9 scaled to [-1,1] and if angle is bigger its capped later in main.
+        return refrence_angle*9/(3.14); // *pid_c.update(refrence_angle, car_angle)
     
     }
 
