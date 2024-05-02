@@ -95,14 +95,10 @@ public:
             }
  
             K.row(t) << scaled_speed;
-
-            std::cout << 1/k << std::endl;
-            std::cout << x_d << std::endl;
-            std::cout << y_d << std::endl;
-            std::cout << x_dd << std::endl;
-            std::cout << y_dd << std::endl;
-
+            R.row(t) << 1/k;
         }
+
+        std::cout << R << std::endl;
 
         //Is done when initalizing..
         calc_ref = std::make_unique<Calc_ref>(P,K, x_goal, y_goal, goal_angle);
@@ -196,6 +192,7 @@ private:
     Eigen::MatrixXf P;
     std::unique_ptr<Calc_ref> calc_ref;
     Eigen::MatrixXf K;
+    Eigen::MatrixXf R;
 
 
     Eigen::MatrixXf s;
