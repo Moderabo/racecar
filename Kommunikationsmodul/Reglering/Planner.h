@@ -61,26 +61,29 @@ public:
         P << l*s,  Add_points;
 
         for(int t = 0; t < size; t++) 
-        //Small code from https://github.com/reiniscimurs/Bezier-Curve/blob/main/Bezier.py
         //Derivation and second Derivation of the Bezier curve to calculate the curvature in each point
         {
             float step = t / size;
-            float x_d = 3*(pow((1-step),2))*(s.coeff(1,0) - P.coeff(0,0)) + 
-                6*(1-step)*(step)*(s.coeff(2,0)-s.coeff(1,0)) +
-                3*(pow(step,2))*(s.coeff(3,0) - s.coeff(2.0));
+            float a = s.coeff(0,0);
+            float b = s.coeff(1,0);
+            float c = s.coeff(2,0);
+            float d = s.coeff(3,0);
+            float e = s.coeff(0,1);
+            float f = s.coeff(1,1);
+            float g = s.coeff(2,1);
+            float h = s.coeff(3,1);
 
-            float y_d = 3*(pow((1-step),2))*(s.coeff(1,1) - P.coeff(0,1)) + 
-                6*(1-step)*(step)*(s.coeff(2,1)-s.coeff(1,1)) +
-                3*(pow(step,2))*(s.coeff(3,1) - s.coeff(2,1));
+            float x_d = 3*((d-3*c+3*b-a)*pow(step,2) + 2*(c-2*b+a)*step + (b-a));
 
-            float x_dd = 6*(1-step)*(s.coeff(2,0) -2*s.coeff(1,0) + s.coeff(0,0)) +
-                6*(step)*(s.coeff(3,0) -2*s.coeff(2,0) + s.coeff(1,0));
+            float y_d = 3*((h-3*g+3*f-e)*pow(step,2) + 2*(g-2*f+e)*step + (f-e));
 
-            float y_dd = 6*(1-step)*(s.coeff(2,1) -2*s.coeff(1,1) + s.coeff(0,1)) +
-                6*(step)*(s.coeff(3,1) -2*s.coeff(2,1) + s.coeff(1,1));
+            float x_dd = 6*((d-3*c+3*b-a)*step + (c-2*b+a));
+
+            float y_dd = 6*((h-3*g+3*f-e)*step + (g-2*f+e));
+
             //absolute value... 
             float scaled_speed = 0.1 ; // max steering is 0.5
-            float k = pow(pow((x_d*y_dd - y_d*x_dd)/(pow( (pow(x_d,2) + pow(y_d,2)) ,3.f/2.f)),2),0.5);
+            float k = pow(pow(      (x_d*y_dd - y_d*x_dd)/(pow(  (pow(x_d,2.f) + pow(y_d,2.f))   ,3.f/2.f))    ,2.f),0.5f);
 
             if(k <= min_radius){
                 scaled_speed = minimum_scaled_speed;
@@ -92,6 +95,12 @@ public:
             }
  
             K.row(t) << scaled_speed;
+
+            std::cout << k << std::endl;
+            std::cout << x_d << std::endl;
+            std::cout << y_d << std::endl;
+            std::cout << x_dd << std::endl;
+            std::cout << y_dd << std::endl;
 
         }
 
