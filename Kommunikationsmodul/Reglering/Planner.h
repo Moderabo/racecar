@@ -12,7 +12,7 @@ public:
 
     // the main function should be called once every time we get new gate-data
     void update(float prev_x, float prev_y, float prev_angle,float next_x, float next_y, float next_angle, float T_c);
- 
+
     // setters for the parameters used when determining ref speed and angle
     void set_min_radius(float radius);
     void set_max_radius(float radius);
@@ -31,7 +31,6 @@ public:
     // Get the data in a string format which can be sent over mqtt 
     std::string getBezier_points();
     std::string getBezier_curve();
-
 private:
 
     // parameters for controll

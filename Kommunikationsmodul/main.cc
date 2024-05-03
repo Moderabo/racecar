@@ -116,16 +116,16 @@ int main(int argc, const char * argv[])
             //saveCones(cones);
 
             // Find all valid gates
-            std::vector<AltGate> gates;
+            std::vector<Gate> gates;
             gates = findGates(cones);
             //saveGates(gates);
 
             // Find previous and next gate
-            std::pair<AltGate,AltGate> prev_next_gate;
+            std::pair<Gate,Gate> prev_next_gate;
             prev_next_gate = findPrevNextGate(gates);
 
-            AltGate prev_gate { prev_next_gate.first };
-            AltGate next_gate { prev_next_gate.second };
+            Gate prev_gate { prev_next_gate.first };
+            Gate next_gate { prev_next_gate.second };
 
             //Calculation of time diffrence pid.
             T_c = (timestamp() - tlast) / 1000.f;
@@ -142,11 +142,8 @@ int main(int argc, const char * argv[])
             angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
 
             i2c_connection.steer(angle_to_steer);
-            sleep(0.05);
             i2c_connection.gas(bezier.getRefSpeed());
-            sleep(0.01);
             int speed = i2c_connection.getSpeed();
-            sleep(0.01);
             mqtt_connection.pubSpeed( t, speed );
         }
     }

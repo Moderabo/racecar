@@ -1,39 +1,70 @@
+#include <cmath>
 #include <vector>
 #include "utils.h"
 
 
-AltGate convertGate(Gate &gate)
+Gate convertGate(ConePair &cone_pair)
 {
-    float x0 { gate.first.x };
-    float y0 { gate.first.y };
-    float x1 { gate.second.x };
-    float y1 { gate.second.y };
+    float x0 { cone_pair.first.x };
+    float y0 { cone_pair.first.y };
+    float x1 { cone_pair.second.x };
+    float y1 { cone_pair.second.y };
+    // Vector from 0 to 1 cone
+    float x01 { (x1 - x0) / sqrtf((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)) };
+    float y01 { (y1 - y0) / sqrtf((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)) };
 
-    AltGate alt_gate;
-
-    alt_gate.x = (x1 + x0) / 2;
-    alt_gate.y = (y1 + y0) / 2;
-    //alt_gate.angle = acos( abs(y1-y0) / sqrt( (x1-x0)*(x1-x0)+(y1-y0)*(y1-y0) ) );
+    Gate gate;
+    // Calculate midpoint of the space between cones and not from cone midpoint
+    gate.x = ( x0 + x1 + x01 * (cone_pair.first.r-cone_pair.second.r) ) / 2;
+    gate.y = ( y0 + y1 + y01 * (cone_pair.first.r-cone_pair.second.r) ) / 2;
+    
     float theta = atan2f(y1-y0,x1-x0);
 
     if ( theta < -M_PI / 2 )
     {
-        alt_gate.angle = M_PI / 2 + theta;
+        gate.angle = M_PI / 2 + theta;
     }
     else if ( theta < 0 )
     {
-        alt_gate.angle = M_PI / 2 + theta;
+        gate.angle = M_PI / 2 + theta;
     }
     else if ( theta < M_PI / 2 )
     {
-        alt_gate.angle = -M_PI / 2 + theta;
+        gate.angle = -M_PI / 2 + theta;
     }
     else
     {
-        alt_gate.angle = -M_PI / 2 + theta;
+        gate.angle = -M_PI / 2 + theta;
     }
+    
+    // Find type
+    if ( cone_pair.first.r == 120.f/2 && cone_pair.second.r == 120.f/2 )
+    {
+        gate.type = 0;
+    }
+    else if ( cone_pair.first.r == 190.f/2 && cone_pair.second.r == 190.f/2 )
+    {
+        gate.type = 2;
+    }
+    else
+    {
+        float xgc { cone_pair.first.x - gate.x };
+        float ygc { cone_pair.first.y - gate.y };
+        float xg { -gate.y };
+        float yg { gate.x };
+        bool left_cone { xgc * xg + ygc * yg > 0 };
 
-    return alt_gate;
+        if ( left_cone && cone_pair.first.r == 120.f/2 )
+        {
+            gate.type = -1;
+        }
+        else
+        {
+            gate.type = 1;
+        }
+    }
+    
+    return gate;
 }
 
 
@@ -48,9 +79,17 @@ bool validGate(Cone &cone1, Cone &cone2)
 }
 
 
-std::vector<AltGate> findGates(std::vector<Cone> &cones)
+bool isInGate(Gate prev, Gate next)
 {
-    std::vector<AltGate> gates {};
+    if ((prev.x*prev.x+prev.y*prev.y < 250*250 ) || (next.x*next.x+next.y*next.y < 250*250 ))  
+        return true;
+
+    return false;
+}
+
+std::vector<Gate> findGates(std::vector<Cone> &cones)
+{
+    std::vector<Gate> gates {};
 
     for (auto cone1 = cones.begin(); cone1 != cones.end(); cone1++)
     {
@@ -58,8 +97,8 @@ std::vector<AltGate> findGates(std::vector<Cone> &cones)
         {
             if ( validGate(*cone1, *cone2) )
             {
-                Gate gate {*cone1, *cone2};
-                gates.push_back(convertGate(gate));
+                ConePair cone_pair {*cone1, *cone2};
+                gates.push_back(convertGate(cone_pair));
             }
         }
     }
@@ -68,9 +107,9 @@ std::vector<AltGate> findGates(std::vector<Cone> &cones)
 }
 
 
-std::pair<AltGate,AltGate> findPrevNextGate(std::vector<AltGate> &gates)
+std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
 {
-    std::pair<AltGate,AltGate> prev_next_gate {};
+    std::pair<Gate,Gate> prev_next_gate {};
     float closest_prev_gate { 1e30 };
     float closest_next_gate { 1e30 };
 
@@ -99,15 +138,31 @@ std::pair<AltGate,AltGate> findPrevNextGate(std::vector<AltGate> &gates)
     if ( closest_prev_gate > 1e29 )
     {
         // If no previous is found, add one behind of the car
-        AltGate prev_gate {-1e3, 0, 0};
+        Gate prev_gate {-1e3, 0, 0};
         prev_next_gate.second = prev_gate;
     }
     // Check if a next gate is found
     if ( closest_next_gate > 1e29 )
     {
         // If no next is found, add one in front of the car
-        AltGate next_gate {1e3, 0, 0};
+        Gate next_gate {1e3, 0, 0};
         prev_next_gate.first = next_gate;
+    }
+
+    // Change angle if needed (boundary condition)
+    float gate_diff_x = prev_next_gate.second.x - prev_next_gate.first.x;
+    float gate_diff_y = prev_next_gate.second.y - prev_next_gate.first.y;
+
+    float gate_diff_angle = atan2f(gate_diff_y, gate_diff_x);
+
+    if ( cos( gate_diff_angle - prev_next_gate.first.angle) < 0 )
+    {
+        prev_next_gate.first.angle = prev_next_gate.first.angle + M_PI;
+    }
+
+    if ( cos( gate_diff_angle - prev_next_gate.second.angle) < 0 )
+    {
+        prev_next_gate.second.angle = prev_next_gate.second.angle + M_PI;
     }
 
     return prev_next_gate;
@@ -155,19 +210,19 @@ void saveCones(std::vector<Cone> &cones)
 }
 
 
-void saveGates(std::vector<Gate> &gates)
+void saveGates(std::vector<ConePair> &cone_pairs)
 {
 	std::ofstream file;
 	file.open("gates.csv");
 
-	for (auto &gate : gates)
+	for (auto &cone_pair : cone_pairs)
 	{
-		file << gate.first.x  << ','
-             << gate.first.y  << ','
-             << gate.first.r  << ','
-             << gate.second.x << ','
-             << gate.second.y << ','
-             << gate.second.r << ',' << '\n';
+		file << cone_pair.first.x  << ','
+             << cone_pair.first.y  << ','
+             << cone_pair.first.r  << ','
+             << cone_pair.second.x << ','
+             << cone_pair.second.y << ','
+             << cone_pair.second.r << ',' << '\n';
 	}
 
 	file.close();

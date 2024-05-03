@@ -6,6 +6,9 @@ LDFLAGS = -Llidar_lib -lsl_lidar_sdk -lwiringPi -lpaho-mqttpp3 -lpaho-mqtt3as
 main: main.o Lidar.o utils.o MQTT_Connection.o Planner.o
 	g++ $^ $(CCFLAGS) $(LDFLAGS) -o $@.out
 
+exec: main
+	./main.out
+
 main.o: main.cc
 	g++ $(CCFLAGS) $(LDFLAGS) -c $< -o $@
 
