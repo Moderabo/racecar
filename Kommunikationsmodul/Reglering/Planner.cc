@@ -1,4 +1,5 @@
 #include "Planner.h"
+#include "PID.h"
 
 void Planner::update(float x_start, float y_start, float start_angle,float x_goal, float y_goal, float goal_angle, float T_c)
 {
@@ -112,11 +113,10 @@ void Planner::update(float x_start, float y_start, float start_angle,float x_goa
     CTS = angle_from_tangent;
 
     // get the angle we should turn
-    refrence_angle = (K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS)*9/(3.14);
-    pid_c.update(refrence_angle,0);
-
+    float controller = pid_c.update((K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS)*9/(3.14),0);
+    refrence_angle = (K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS)*9/(3.14)*controller;
+    
     refrence_speed =  K.coeff(index);
-
     // the return is still found in getRefAngle, in the return pid_c is added.
 }
 
@@ -152,8 +152,8 @@ void Planner::set_K_p_offset_tangent(float fraction)
 
 float Planner::getRefAngle()
 {
-    //returns something normally between pi/9 scaled to [0,1] and if angle is bigger its capped later in main.
-    return refrence_angle*pid_c.update(refrence_angle, car_angle);
+    //returns something normally between pi/9 and -pi/9 scaled to [-1,1] and if angle is bigger its capped later in main.
+    return refrence_angle;
 }
 
 float Planner::getRefSpeed()
