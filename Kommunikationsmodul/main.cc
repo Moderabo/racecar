@@ -126,7 +126,7 @@ int main(int argc, const char * argv[])
             AltGate prev_gate { prev_next_gate.first };
             AltGate next_gate { prev_next_gate.second };
 
-            // Route planning and calculation of
+            // Route planning and calculation of based on gate positions
             bezier.update(prev_gate.x, prev_gate.y, prev_gate.angle,
                           next_gate.x, next_gate.y ,next_gate.angle);
 
@@ -134,7 +134,7 @@ int main(int argc, const char * argv[])
             mqtt_connection.pubBezier(bezier.getBezier_points());
             mqtt_connection.pubCurve(bezier.getBezier_curve());
 
-            float angle_to_steer = bezier.getRefAngle(0, 0, 0);
+            float angle_to_steer = bezier.getRefAngle();
             angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
 
             i2c_connection.steer(angle_to_steer);
