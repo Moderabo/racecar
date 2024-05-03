@@ -1,7 +1,7 @@
 #include "Planner.h"
 #include "PID.h"
 
-void Planner::update(AltGate prev_gate, AltGate next_gate,float T_c)
+void Planner::update(Gate prev_gate, Gate next_gate,float T_c)
 {
     // the number of points that should be used
     int size{};

@@ -12,7 +12,7 @@ public:
     ~Planner() = default;
 
     // the main function should be called once every time we get new gate-data
-    void update(AltGate prev_gate, AltGate next_gate,float T_c);
+    void update(Gate prev_gate, Gate next_gate,float T_c);
  
     // setters for the parameters used when determining ref speed and angle
     void set_min_radius(float radius);
