@@ -11,12 +11,13 @@ void Planner::update(AltGate prev_gate, AltGate next_gate,float T_c)
     {
 
         case -1:    // before the first lap
+        {
         size = 0;
-
         break;
+        }
  
         case 0:     // calibration
-
+        {
         // take out the coordinates from the gates
         float x_start = prev_gate.x;
         float y_start = prev_gate.y;
@@ -37,10 +38,14 @@ void Planner::update(AltGate prev_gate, AltGate next_gate,float T_c)
         // calculate the curvature in every point (matrix K)
         calc_K(size);
         break;
+        }
 
 
-       default:     // time trials
+        default:     // time trials
+        {
         size = 0;
+        break;
+        }
 
 
 
