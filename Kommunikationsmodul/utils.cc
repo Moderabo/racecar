@@ -2,6 +2,7 @@
 #include <vector>
 #include "utils.h"
 
+#include <iostream>
 
 Gate convertGate(ConePair &cone_pair)
 {
@@ -139,16 +140,15 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
     {
         // If no previous is found, add one behind of the car
         Gate prev_gate {-1e3, 0, 0};
-        prev_next_gate.second = prev_gate;
+        prev_next_gate.first = prev_gate;
     }
     // Check if a next gate is found
     if ( closest_next_gate > 1e29 )
     {
         // If no next is found, add one in front of the car
         Gate next_gate {1e3, 0, 0};
-        prev_next_gate.first = next_gate;
+        prev_next_gate.second = next_gate;
     }
-
     // Change angle if needed (boundary condition)
     float gate_diff_x = prev_next_gate.second.x - prev_next_gate.first.x;
     float gate_diff_y = prev_next_gate.second.y - prev_next_gate.first.y;

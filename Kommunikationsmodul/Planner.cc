@@ -1,8 +1,12 @@
 #include "Planner.h"
 #include "PID.h"
 
+#include <iostream>
+
 void Planner::update(Gate prev_gate, Gate next_gate,float T_c)
 {
+    std::cout << "lap: " << lap_nr << std::endl;
+
     // based on the state you should do different things
     switch(current_state) 
     {
@@ -164,8 +168,6 @@ void Planner::calc_K(int size)
 void Planner::calc_ref()
 {
     Eigen::VectorXf d_vec(P.rows());
-    PIDController pid_c {T_c, {0.87154,6.84371,0,100,1,1}};
-
 
     // here we should loop over all the points in the P vector (size + extra after gate)
     for(int n=0; n < P.rows(); n++ ){
@@ -189,10 +191,9 @@ void Planner::calc_ref()
     CTS = angle_from_tangent;
 
     // get the angle we should turn
-    float controller = pid_c.update((K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS)*9/(3.14),0);
-    refrence_angle = (K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS)*9/(3.14)*controller;
+    refrence_angle = (K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS)*9/(3.14);
     
-    refrence_speed =  K.coeff(index);
+    refrence_speed =  K.coeff(index + 3);
     // the return is still found in getRefAngle, in the return pid_c is added.
 }
 
