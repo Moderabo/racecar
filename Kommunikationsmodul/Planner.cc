@@ -3,20 +3,10 @@
 
 void Planner::update(Gate prev_gate, Gate next_gate,float T_c)
 {
-    // the number of points that should be used
-    int size{};
-    
-    // based on the lap number you should do different things
-    switch(lap_nr) 
+    // based on the state you should do different things
+    switch(current_state) 
     {
-
-        case -1:    // before the first lap
-        {
-        size = 0;
-        break;
-        }
- 
-        case 0:     // calibration
+        case calibration:     // calibration
         {
         // take out the coordinates from the gates
         float x_start = prev_gate.x;
@@ -28,7 +18,7 @@ void Planner::update(Gate prev_gate, Gate next_gate,float T_c)
 
         // Determine the number of points in the parameter curve on distance between gates
         float len = pow(pow(x_start-x_goal,2)+pow(y_start-y_goal,2),0.5f);
-        size = (len)/85;
+        int size = (len)/85;
         
         // {\HUGE OBS these functions must be called in this specific order!!}
 
@@ -37,22 +27,49 @@ void Planner::update(Gate prev_gate, Gate next_gate,float T_c)
 
         // calculate the curvature in every point (matrix K)
         calc_K(size);
+    
+        // now calculate all the parameters used in controlling the car
+        calc_ref();
+
+        // if we should change state
+        if (lap_nr > 0) current_state = stop;
         break;
         }
 
-
-        default:     // time trials
+        case stop:    // stop before comp
         {
-        size = 0;
+        refrence_angle = 0;
+        refrence_speed = 0;
         break;
         }
 
+        case comp:     // time trials
+        {
+        
+        if (lap_nr > 5) current_state = finish;
+        break;
+        }
+
+        case finish: // when the race is finished do nothing!
+        {
+        break;
+        }
 
 
     }
+
+    if (in_a_gate == true && isInGate(prev_gate,next_gate) == false)
+    {
+        segment_nr += 1;
+        if (prev_gate.type == 2)
+        {
+            segment_nr = 0;
+            lap_nr += 1;
+        }
+    }
+    in_a_gate = isInGate(prev_gate,next_gate);
     
-    // now calculate all the parameters used in controlling the car
-    calc_ref(size);
+    // Now we check if we should 
           
 }
 
@@ -144,7 +161,7 @@ void Planner::calc_K(int size)
     K = K1 , Add_points;
 }
 
-void Planner::calc_ref(int size)
+void Planner::calc_ref()
 {
     Eigen::VectorXf d_vec(P.rows());
     PIDController pid_c {T_c, {0.87154,6.84371,0,100,1,1}};

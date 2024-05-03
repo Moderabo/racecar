@@ -63,9 +63,14 @@ private:
     float refrence_angle;
     float refrence_speed;
 
+    // state variables
+    enum state {calibration, stop, comp, finish};
+    state current_state = calibration;
+
     // parameters used in controlling the segments
     int segment_nr = -1;
-    int lap_nr = 0;
+    int lap_nr = -1;
+    bool in_a_gate = false;
 
     //time diffrence for pid controller.
     float T_c;
@@ -83,7 +88,7 @@ private:
     // calculate the curvature of the curve in each point
     void calc_K(int size);
     // calculat the all the usefull stuff, this requires P and K
-    void calc_ref(int size);
+    void calc_ref();
 };
 
 #endif /* PLANNER_H_ */
