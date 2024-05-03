@@ -149,6 +149,22 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
         prev_next_gate.first = next_gate;
     }
 
+    // Change angle if needed (boundary condition)
+    float gate_diff_x = prev_next_gate.second.x - prev_next_gate.first.x;
+    float gate_diff_y = prev_next_gate.second.y - prev_next_gate.first.y;
+
+    float gate_diff_angle = atan2f(gate_diff_y, gate_diff_x);
+
+    if ( cos( gate_diff_angle - prev_next_gate.first.angle) < 0 )
+    {
+        prev_next_gate.first.angle = prev_next_gate.first.angle + M_PI;
+    }
+
+    if ( cos( gate_diff_angle - prev_next_gate.second.angle) < 0 )
+    {
+        prev_next_gate.second.angle = prev_next_gate.second.angle + M_PI;
+    }
+
     return prev_next_gate;
 }
 
