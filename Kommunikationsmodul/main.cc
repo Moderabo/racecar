@@ -46,8 +46,9 @@ int main(int argc, const char * argv[])
 
     Planner bezier{};
 
-    uint64_t t {0};
-    uint64_t tstart {timestamp()};
+    float T_c {0};
+    float t {0};
+    uint64_t tlast {timestamp()};
     int state {0};
     std::vector<float> commands;
 
@@ -59,7 +60,7 @@ int main(int argc, const char * argv[])
             break;
         }
 
-        t = timestamp() - tstart;
+
 
         // steer, gas, mode
         commands = mqtt_connection.receiveMsg();
@@ -126,9 +127,13 @@ int main(int argc, const char * argv[])
             AltGate prev_gate { prev_next_gate.first };
             AltGate next_gate { prev_next_gate.second };
 
+            //Calculation of time diffrence pid.
+            T_c = (timestamp() - tlast) / 1000.f;
+            tlast = timestamp();
+
             // Route planning and calculation of based on gate positions
             bezier.update(prev_gate.x, prev_gate.y, prev_gate.angle,
-                          next_gate.x, next_gate.y ,next_gate.angle);
+                          next_gate.x, next_gate.y ,next_gate.angle, T_c);
 
             mqtt_connection.pubCones(cones);
             mqtt_connection.pubBezier(bezier.getBezier_points());

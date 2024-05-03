@@ -1,6 +1,6 @@
 #include "Planner.h"
 
-void Planner::update(float x_start, float y_start, float start_angle,float x_goal, float y_goal, float goal_angle)
+void Planner::update(float x_start, float y_start, float start_angle,float x_goal, float y_goal, float goal_angle, float T_c)
 {
     // set all the member variables
     s = Eigen::MatrixXf(4,2);
@@ -9,8 +9,8 @@ void Planner::update(float x_start, float y_start, float start_angle,float x_goa
     float len = pow(pow(x_start-x_goal,2)+pow(y_start-y_goal,2),0.5f);
     int size = (len)/85;
     P = Eigen::MatrixXf(size+5,2); // here we add 5 points after the last gate
-    K = Eigen::MatrixXf(size+5,1); //MÅSTE FIXA MED DE EXTA 5 PUNKTERNA!!!
-    R = Eigen::MatrixXf(size+5,1);
+    K = Eigen::MatrixXf(size+5,1); //Eigen kan inte K << K, Addpoints1 därav K1
+    K1 = Eigen::MatrixXf(size,1);
     Eigen::MatrixXf l(size,4);
 
     //Position in s matrix
@@ -35,12 +35,10 @@ void Planner::update(float x_start, float y_start, float start_angle,float x_goa
     // Here we add the extra points after the gate
     Eigen::MatrixXf Add_points(P.rows() - size,2);
     Eigen::MatrixXf Add_points1(K.rows() - size,1);
-    Eigen::MatrixXf Add_points2(R.rows() - size,1); //test
     for(int i = 1; i <= P.rows()-size; i++)
     {
         Add_points.row(i-1) << (x_goal + 100*i*cos(goal_angle)), (y_goal + 100*i*sin(goal_angle));
         Add_points1.row(i-1) << minimum_scaled_speed;
-        Add_points2.row(i-1) << min_radius;
 
 
     }
@@ -80,17 +78,17 @@ void Planner::update(float x_start, float y_start, float start_angle,float x_goa
             scaled_speed = minimum_scaled_speed + (maximum_scaled_speed - minimum_scaled_speed)*(1/k-min_radius)/max_radius; //räta linkens ekvation
         }
 
-        K.row(t) << scaled_speed;
-        R.row(t) << 1/k;
+        K1.row(t) << scaled_speed;
     }
 
-    K = K , Add_points1;
-    R = R , Add_points2;
+    K = K1 , Add_points1;
 
     // This was update_ref now we do what it did in the primary update function
     //=============================================================================================
 
     Eigen::VectorXf d_vec(P.rows());
+    PIDController pid_c {T_c, {0.87154,6.84371,0,100,1,1}};
+
 
     // here we should loop over all the points in the P vector (size + extra after gate)
     for(int n=0; n < P.rows(); n++ ){
@@ -115,9 +113,11 @@ void Planner::update(float x_start, float y_start, float start_angle,float x_goa
 
     // get the angle we should turn
     refrence_angle = (K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS)*9/(3.14);
+    pid_c.update(refrence_angle,0);
+
     refrence_speed =  K.coeff(index);
 
-    // the return is still found in getRefAngle
+    // the return is still found in getRefAngle, in the return pid_c is added.
 }
 
 void Planner::set_min_radius(float radius)
@@ -153,7 +153,7 @@ void Planner::set_K_p_offset_tangent(float fraction)
 float Planner::getRefAngle()
 {
     //returns something normally between pi/9 scaled to [0,1] and if angle is bigger its capped later in main.
-    return refrence_angle; //*pid_c.update(refrence_angle, car_angle)
+    return refrence_angle*pid_c.update(refrence_angle, car_angle);
 }
 
 float Planner::getRefSpeed()

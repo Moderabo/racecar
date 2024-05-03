@@ -13,7 +13,7 @@ public:
     ~Planner() = default;
 
     // the main function should be called once every time we get new gate-data
-    void update(float prev_x, float prev_y, float prev_angle,float next_x, float next_y, float next_angle);
+    void update(float prev_x, float prev_y, float prev_angle,float next_x, float next_y, float next_angle, float T_c);
  
     // setters for the parameters used when determining ref speed and angle
     void set_min_radius(float radius);
@@ -45,9 +45,8 @@ private:
 
     // contains curvature in all points of the bezier curve
     Eigen::MatrixXf K;
+    Eigen::MatrixXf K1;
 
-    // ?????
-    Eigen::MatrixXf R;
 
     // the 4 points that define the bezier curve
     Eigen::MatrixXf s;
@@ -64,6 +63,9 @@ private:
     float CTS;
     float refrence_angle;
     float refrence_speed;
+
+    //time diffrence for pid controller.
+    float T_c;
 
     // how many points ahead we look in pure pursit
     int look_ahead_dist = 3;
