@@ -132,7 +132,7 @@ int main(int argc, const char * argv[])
             tlast = timestamp();
 
             // Route planning and calculation of based on gate positions
-            bezier.update(AltGate prev_gate, AltGate next_gate, T_c);
+            bezier.update(prev_gate, next_gate, T_c);
 
             mqtt_connection.pubCones(cones);
             mqtt_connection.pubBezier(bezier.getBezier_points());
