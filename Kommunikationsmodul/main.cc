@@ -144,7 +144,7 @@ int main(int argc, const char * argv[])
             i2c_connection.steer(angle_to_steer);
             i2c_connection.gas(bezier.getRefSpeed());
             int speed = i2c_connection.getSpeed();
-            mqtt_connection.pubSpeed( t, speed );
+            mqtt_connection.pubSpeed( T_c, speed );
         }
     }
     return 0;

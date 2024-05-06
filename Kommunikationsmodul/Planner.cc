@@ -62,6 +62,7 @@ void Planner::update(Gate prev_gate, Gate next_gate,float T_c)
 
     }
 
+    // here we do some stupid stuff to check if we have passed a gate or not
     if (in_a_gate == true && isInGate(prev_gate,next_gate) == false)
     {
         segment_nr += 1;

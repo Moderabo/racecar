@@ -145,9 +145,38 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
     // Check if a next gate is found
     if ( closest_next_gate > 1e29 )
     {
-        // If no next is found, add one in front of the car
-        Gate next_gate {1e3, 0, 0};
-        prev_next_gate.second = next_gate;
+        // depending on what the previous gate was we imagine a new gate at different places
+        switch (prev_next_gate.first.type)
+        {
+        
+        // if the prev gate was a right turn
+        case -1:
+        {
+            std::cout << "case -1" << std::endl;
+            Gate next_gate {1e3, 1e3, -0.79f};
+            prev_next_gate.second = next_gate;
+            break;
+        }
+
+        // if the prev gate was a left turn 
+        case  1:
+        {
+            std::cout << "case 1" << std::endl;
+            Gate next_gate {1e3, -1e3, 0.79f};
+            prev_next_gate.second = next_gate;
+            break;
+        }
+
+        default:
+        {
+            // If no next is found, add one in front of the car
+            Gate next_gate {1e3, 0, 0};
+            prev_next_gate.second = next_gate;
+            break;
+        }
+
+        }
+
     }
     // Change angle if needed (boundary condition)
     float gate_diff_x = prev_next_gate.second.x - prev_next_gate.first.x;
