@@ -55,7 +55,8 @@ Gate convertGate(ConePair &cone_pair)
         float yg { gate.x };
         bool left_cone { xgc * xg + ygc * yg > 0 };
 
-        if ( left_cone && cone_pair.first.r == 120.f/2 )
+        std::cout << left_cone << std::endl;
+        if ( left_cone && (cone_pair.first.r == 120.f/2) )
         {
             gate.type = -1;
         }
