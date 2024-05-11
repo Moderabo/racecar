@@ -36,7 +36,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
     {
     case calibration:     // calibration
     {
-        refrence_speed = minimun_scaled_speed;
+        refrence_speed = minimum_scaled_speed;
 
         // if we should change state
         if (lap_nr == 0 && next_gate.type == 2 && sqrtf(pow(x_goal,2)+pow(y_goal,2)) < 1500)
@@ -215,7 +215,7 @@ void Planner::calc_ref()
     float unscaled_controller = T_c * ( XTE*anglesgn*K_i - unscaled_ref_angle*K_d); 
     refrence_angle = (unscaled_ref_angle + unscaled_controller)*9/(3.14);
     
-    refrence_speed =  K.coeff(index+3);
+    refrence_speed =  K.coeff(index+2);
     // the return is still found in getRefAngle, in the return pid_c is added.
 }
 

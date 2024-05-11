@@ -51,7 +51,7 @@ Gate convertGate(ConePair &cone_pair)
     {
         float xgc { cone_pair.first.x - gate.x };
         float ygc { cone_pair.first.y - gate.y };
-        float xg { -gate.y };
+        float xg { gate.y };
         float yg { gate.x };
         bool left_cone { xgc * xg + ygc * yg > 0 };
 
@@ -137,14 +137,14 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
         }
     }
     // Check if a previous gate is found
-    if ( closest_prev_gate > 2000 )
+    if ( closest_prev_gate > 2000*2000 )
     {
         // If no previous is found, add one behind of the car
         Gate prev_gate {-1e3, 0, 0};
         prev_next_gate.first = prev_gate;
     }
     // Check if a next gate is found
-    if ( closest_next_gate > 2000 )
+    if ( closest_next_gate > 2000*2000 )
     {
         // depending on what the previous gate was we imagine a new gate at different places
         switch (prev_next_gate.first.type)
@@ -154,7 +154,7 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
         case -1:
         {
             //std::cout << "case -1" << std::endl;
-            Gate next_gate {1e3, 1e3, -0.79f};
+            Gate next_gate {1e3, 1e3, 0.79f};
             prev_next_gate.second = next_gate;
             break;
         }
@@ -163,7 +163,7 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
         case  1:
         {
             //std::cout << "case 1" << std::endl;
-            Gate next_gate {1e3, -1e3, 0.79f};
+            Gate next_gate {1e3, -1e3, -0.79f};
             prev_next_gate.second = next_gate;
             break;
         }
