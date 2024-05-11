@@ -39,7 +39,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         refrence_speed = minimum_scaled_speed;
 
         // if we should change state
-        if (lap_nr == 0 && next_gate.type == 2 && sqrtf(pow(x_goal,2)+pow(y_goal,2)) < 1500)
+        if (lap_nr == 0 && next_gate.type == 2 && sqrtf(pow(x_goal,2)+pow(y_goal,2)) < 1000)
         {
             current_state = stop;
             timer = 5;
@@ -73,19 +73,29 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
     }
 
     // here we do some stupid stuff to check if we have passed a gate or not
-    if (in_a_gate && !isInGate(prev_gate,next_gate))
+    if (in_a_gate && !isInGate(prev_gate))
     {
         segment_nr += 1;
-        if (prev_gate.type == 2)
+        if (in_goal)
         {
             segment_nr = 0;
             lap_nr += 1;
         }
     }
-    in_a_gate = isInGate(prev_gate,next_gate);
-    
-    // Now we check if we should 
-          
+        
+    if (isInGate(prev_gate))
+    {
+        in_a_gate = true;
+        if (prev_gate.type == 2)
+        {
+            in_goal = true;
+        }
+    }
+    else
+    {
+        in_a_gate = false;
+        in_goal = false;
+    }
 }
 
 void Planner::calc_P(int size, float x_start, float y_start, float start_angle,
@@ -100,8 +110,8 @@ void Planner::calc_P(int size, float x_start, float y_start, float start_angle,
 
     //Position in s matrix
     s.row(0) << x_start, y_start;
-    s.row(1) << (x_start + 0.5f*len*cos(start_angle)), (y_start + 0.5f*len*sin(start_angle));
-    s.row(2) << (x_goal - 0.5f*len*cos(goal_angle)), (y_goal - 0.5f*len*sin(goal_angle));
+    s.row(1) << (x_start + 0.3f*len*cos(start_angle)), (y_start + 0.3f*len*sin(start_angle));
+    s.row(2) << (x_goal - 0.3f*len*cos(goal_angle)), (y_goal - 0.3f*len*sin(goal_angle));
     s.row(3) << x_goal, y_goal;
 
     Eigen::RowVectorXf distance_vec(size);
@@ -134,7 +144,7 @@ void Planner::calc_K(int size)
     
     Eigen::MatrixXf Add_points(K.rows() - size,1);
     for(int i = 1; i <= P.rows()-size; i++)
-        Add_points.row(i-1) << (minimum_scaled_speed+maximum_scaled_speed) / 2.f;
+        Add_points.row(i-1) << minimum_scaled_speed;
 
     for(int t = 0; t < size; t++) 
     //Derivation and second Derivation of the Bezier curve to calculate the curvature in each point
@@ -215,7 +225,7 @@ void Planner::calc_ref()
     float unscaled_controller = T_c * ( XTE*anglesgn*K_i - unscaled_ref_angle*K_d); 
     refrence_angle = (unscaled_ref_angle + unscaled_controller)*9/(3.14);
     
-    refrence_speed =  K.coeff(index+2);
+    refrence_speed =  K.coeff(index+3);
     // the return is still found in getRefAngle, in the return pid_c is added.
 }
 

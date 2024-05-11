@@ -153,7 +153,7 @@ void Lidar::findCones()
 			continue;
 		}
         // Large cone
-        else if ( r > ( 120 + 30 ) / 2 )
+        else if ( r > ( 120 + 40 ) / 2 )
         {
             r = 190.f / 2;
         }

@@ -71,6 +71,7 @@ private:
     int segment_nr = -1;
     int lap_nr = -1;
     bool in_a_gate = false;
+    bool in_goal = false;
 
     //time diffrence for pid controller.
     float T_c;

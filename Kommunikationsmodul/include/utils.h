@@ -47,7 +47,7 @@ Gate convertGate(ConePair &);
 
 bool validGate(Cone &cone1, Cone &cone2);
 
-bool isInGate(Gate prev, Gate next);
+bool isInGate(Gate prev);
 
 std::vector<Gate> findGates(std::vector<Cone> &cones);
 
