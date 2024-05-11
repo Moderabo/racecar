@@ -4,7 +4,7 @@ IDIR = include
 OBJDIR = objdir
 
 # .o files required for main program
-MAIN = $(addprefix $(OBJDIR), main.o Lidar.o utils.o MQTT_Connection.o \
+MAIN = $(addprefix $(OBJDIR)/, main.o Lidar.o utils.o MQTT_Connection.o \
 	   						  Planner.o)
 
 CCFLAGS = -MMD -pthread -Ilidar_lib -I$(IDIR)
