@@ -1,18 +1,89 @@
 #include "Planner.h"
 #include "PID.h"
 
-void Planner::update(float x_start, float y_start, float start_angle,float x_goal, float y_goal, float goal_angle, float T_c)
-{
-    // set all the member variables
-    s = Eigen::MatrixXf(4,2);
+#include <iostream>
 
-    // base the number of points in the parameter curve on distance between gates
-    float len = pow(pow(x_start-x_goal,2)+pow(y_start-y_goal,2),0.5f);
-    int size = (len)/85;
+void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
+{
+    std::cout << "lap: " << lap_nr << std::endl;
+
+    // based on the state you should do different things
+    switch(current_state) 
+    {
+    case calibration:     // calibration
+    {
+        // take out the coordinates from the gates
+        float x_start = prev_gate.x;
+        float y_start = prev_gate.y;
+        float start_angle = prev_gate.angle;
+        float x_goal = next_gate.x;
+        float y_goal = next_gate.y;
+        float goal_angle = next_gate.angle;
+
+        // Determine the number of points in the parameter curve on distance between gates
+        float len = sqrtf(pow(x_start-x_goal,2)+pow(y_start-y_goal,2));
+        int size = len / 85;
+        
+        // {\HUGE OBS these functions must be called in this specific order!!}
+
+        // now we calculate the bezier curve (matrices s and P)
+        calc_P(size, x_start, y_start, start_angle,x_goal, y_goal, goal_angle);
+
+        // calculate the curvature in every point (matrix K)
+        calc_K(size);
+    
+        // now calculate all the parameters used in controlling the car
+        calc_ref();
+
+        // if we should change state
+        if (lap_nr > 0) current_state = stop;
+        break;
+    }
+
+    case stop:    // stop before comp
+    {
+        refrence_angle = 0;
+        refrence_speed = 0;
+        break;
+    }
+
+    case comp:     // time trials
+    {
+        if (lap_nr > 5) current_state = finish;
+        break;
+    }
+
+    case finish: // when the race is finished do nothing!
+    {   // TODO: Reset and notify computer module
+        break;
+    }
+    }
+
+    // here we do some stupid stuff to check if we have passed a gate or not
+    if (in_a_gate && !isInGate(prev_gate,next_gate))
+    {
+        segment_nr += 1;
+        if (prev_gate.type == 2)
+        {
+            segment_nr = 0;
+            lap_nr += 1;
+        }
+    }
+    in_a_gate = isInGate(prev_gate,next_gate);
+    
+    // Now we check if we should 
+          
+}
+
+void Planner::calc_P(int size, float x_start, float y_start, float start_angle,
+                     float x_goal, float y_goal, float goal_angle)
+{    
+    // set all the member variables
     P = Eigen::MatrixXf(size+5,2); // here we add 5 points after the last gate
-    K = Eigen::MatrixXf(size+5,1); //Eigen kan inte K << K, Addpoints1 därav K1
-    K1 = Eigen::MatrixXf(size,1);
+    s = Eigen::MatrixXf(4,2);
     Eigen::MatrixXf l(size,4);
+
+    float len = pow(pow(x_start-x_goal,2)+pow(y_start-y_goal,2),0.5f);
 
     //Position in s matrix
     s.row(0) << x_start, y_start;
@@ -35,16 +106,23 @@ void Planner::update(float x_start, float y_start, float start_angle,float x_goa
     }
     // Here we add the extra points after the gate
     Eigen::MatrixXf Add_points(P.rows() - size,2);
-    Eigen::MatrixXf Add_points1(K.rows() - size,1);
     for(int i = 1; i <= P.rows()-size; i++)
     {
         Add_points.row(i-1) << (x_goal + 100*i*cos(goal_angle)), (y_goal + 100*i*sin(goal_angle));
-        Add_points1.row(i-1) << minimum_scaled_speed;
-
 
     }
     P << l*s,  Add_points;
+}
+
+void Planner::calc_K(int size)
+{
+    K = Eigen::MatrixXf(size+5,1); //Eigen kan inte K << K, Addpoints1 därav K1
+    Eigen::MatrixXf K1(size,1);
     
+    Eigen::MatrixXf Add_points(K.rows() - size,1);
+    for(int i = 1; i <= P.rows()-size; i++)
+        Add_points.row(i-1) << minimum_scaled_speed;
+
     for(int t = 0; t < size; t++) 
     //Derivation and second Derivation of the Bezier curve to calculate the curvature in each point
     {
@@ -82,14 +160,12 @@ void Planner::update(float x_start, float y_start, float start_angle,float x_goa
         K1.row(t) << scaled_speed;
     }
 
-    K = K1 , Add_points1;
+    K = K1 , Add_points;
+}
 
-    // This was update_ref now we do what it did in the primary update function
-    //=============================================================================================
-
+void Planner::calc_ref()
+{
     Eigen::VectorXf d_vec(P.rows());
-    PIDController pid_c {T_c, {0.87154,6.84371,0,100,1,1}};
-
 
     // here we should loop over all the points in the P vector (size + extra after gate)
     for(int n=0; n < P.rows(); n++ ){
@@ -113,10 +189,9 @@ void Planner::update(float x_start, float y_start, float start_angle,float x_goa
     CTS = angle_from_tangent;
 
     // get the angle we should turn
-    float controller = pid_c.update((K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS)*9/(3.14),0);
-    refrence_angle = (K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS)*9/(3.14)*controller;
+    refrence_angle = (K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS)*9/(3.14);
     
-    refrence_speed =  K.coeff(index);
+    refrence_speed =  K.coeff(index + 3);
     // the return is still found in getRefAngle, in the return pid_c is added.
 }
 
@@ -158,7 +233,7 @@ float Planner::getRefAngle()
 
 float Planner::getRefSpeed()
 {
-    return;
+    return refrence_speed;
 }
 
 float Planner::get_XTE()
@@ -179,7 +254,7 @@ Eigen::MatrixXf Planner::get_Bezier_mat()
 std::string Planner::getBezier_curve()
 {
     std::ostringstream ss;        
-    for(int i {0};i< P.rows(); i++)
+    for(int i {0}; i < P.rows(); i++)
     {
             ss << P.coeff(i,0) << "," << P.coeff(i,1) << ";";
     }
@@ -190,7 +265,7 @@ std::string Planner::getBezier_curve()
 std::string Planner::getBezier_points()
 {
     std::ostringstream ss;
-    for(int i {0};i<=3; i++)
+    for(int i {0}; i < 4; i++)
     {
         ss << s.coeff(i,0) << "," << s.coeff(i,1) << ";";
     }

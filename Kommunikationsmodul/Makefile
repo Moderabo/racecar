@@ -1,19 +1,30 @@
 
-CCFLAGS = -MMD -pthread -Ilidar_lib -IReglering
+SRC = src
+IDIR = include
+OBJDIR = objdir
+
+# .o files required for main program
+MAIN = $(addprefix $(OBJDIR), main.o Lidar.o utils.o MQTT_Connection.o \
+	   						  Planner.o)
+
+CCFLAGS = -MMD -pthread -Ilidar_lib -I$(IDIR)
 
 LDFLAGS = -Llidar_lib -lsl_lidar_sdk -lwiringPi -lpaho-mqttpp3 -lpaho-mqtt3as
 
-main: main.o Lidar.o utils.o MQTT_Connection.o Planner.o
+main: $(MAIN)
 	g++ $^ $(CCFLAGS) $(LDFLAGS) -o $@.out
 
 exec: main
 	./main.out
 
-main.o: main.cc
+$(OBJDIR)/main.o: $(SRC)/main.cc | dir
 	g++ $(CCFLAGS) $(LDFLAGS) -c $< -o $@
 
-%.o: %.cc %.h
+$(OBJDIR)/%.o: $(SRC)/%.cc $(IDIR)/%.h | dir
 	g++ $(CCFLAGS) $(LDFLAGS) -c $< -o $@
+
+dir:
+	@mkdir -p $(OBJDIR)
 
 -include *.d
 

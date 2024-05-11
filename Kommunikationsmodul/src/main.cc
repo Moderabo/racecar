@@ -44,7 +44,7 @@ int main(int argc, const char * argv[])
     // Initiate LiDAR
     Lidar lidar {};
 
-    Planner bezier{};
+    Planner planner{};
 
     float T_c {0};
     float t {0};
@@ -59,8 +59,6 @@ int main(int argc, const char * argv[])
         {
             break;
         }
-
-
 
         // steer, gas, mode
         commands = mqtt_connection.receiveMsg();
@@ -85,12 +83,12 @@ int main(int argc, const char * argv[])
                     sleep(0.01);
                     break;
                 case 2:  // Automatic
-                    bezier.set_maximum_scaled_speed(commands.at(1));
-                    bezier.set_minimum_scaled_speed(commands.at(2));
-                    bezier.set_min_radius(commands.at(3));
-                    bezier.set_max_radius(commands.at(4));
-                    bezier.set_K_p_angle_to_goal(commands.at(5));
-                    bezier.set_K_p_offset_tangent(commands.at(6));
+                    planner.set_maximum_scaled_speed(commands.at(1));
+                    planner.set_minimum_scaled_speed(commands.at(2));
+                    planner.set_min_radius(commands.at(3));
+                    planner.set_max_radius(commands.at(4));
+                    planner.set_K_p_angle_to_goal(commands.at(5));
+                    planner.set_K_p_offset_tangent(commands.at(6));
                     lidar.start();
                     break;
                 default:
@@ -132,17 +130,17 @@ int main(int argc, const char * argv[])
             tlast = timestamp();
 
             // Route planning and calculation of based on gate positions
-            bezier.update(prev_gate, next_gate, T_c);
+            planner.update(prev_gate, next_gate, T_c);
 
             mqtt_connection.pubCones(cones);
-            mqtt_connection.pubBezier(bezier.getBezier_points());
-            mqtt_connection.pubCurve(bezier.getBezier_curve());
+            mqtt_connection.pubplanner(planner.getplanner_points());
+            mqtt_connection.pubCurve(planner.getplanner_curve());
 
-            float angle_to_steer = bezier.getRefAngle();
+            float angle_to_steer = planner.getRefAngle();
             angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
 
             i2c_connection.steer(angle_to_steer);
-            i2c_connection.gas(bezier.getRefSpeed());
+            i2c_connection.gas(planner.getRefSpeed());
             int speed = i2c_connection.getSpeed();
             mqtt_connection.pubSpeed( T_c, speed );
         }
