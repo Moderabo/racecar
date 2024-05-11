@@ -173,7 +173,7 @@ void Planner::calc_K(int size)
         K1.row(t) << scaled_speed;
     }
 
-    K = K1 , Add_points;
+    K << K1 , Add_points;
 }
 
 void Planner::calc_ref()
