@@ -137,14 +137,14 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
         }
     }
     // Check if a previous gate is found
-    if ( closest_prev_gate > 1e29 )
+    if ( closest_prev_gate > 2000 )
     {
         // If no previous is found, add one behind of the car
         Gate prev_gate {-1e3, 0, 0};
         prev_next_gate.first = prev_gate;
     }
     // Check if a next gate is found
-    if ( closest_next_gate > 1e29 )
+    if ( closest_next_gate > 2000 )
     {
         // depending on what the previous gate was we imagine a new gate at different places
         switch (prev_next_gate.first.type)
