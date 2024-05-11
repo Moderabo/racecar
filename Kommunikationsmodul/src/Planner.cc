@@ -36,10 +36,10 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
     {
     case calibration:     // calibration
     {
-        refrence_speed = 0.1;
+        refrence_speed = minimun_scaled_speed;
 
         // if we should change state
-        if (lap_nr == 0 && next_gate.type == 2)
+        if (lap_nr == 0 && next_gate.type == 2 && sqrtf(pow(x_goal,2)+pow(y_goal,2)) < 1500)
         {
             current_state = stop;
             timer = 5;
@@ -54,7 +54,6 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         {
             current_state = comp;
         }
-        refrence_angle = 0;
         refrence_speed = 0;
         break;
     }
@@ -68,7 +67,6 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
 
     case finish: // when the race is finished do nothing!
     {   // TODO: Reset and notify computer module
-        refrence_angle = 0;
         refrence_speed = 0;
         break;
     }
@@ -136,7 +134,7 @@ void Planner::calc_K(int size)
     
     Eigen::MatrixXf Add_points(K.rows() - size,1);
     for(int i = 1; i <= P.rows()-size; i++)
-        Add_points.row(i-1) << minimum_scaled_speed;
+        Add_points.row(i-1) << (minimum_scaled_speed+maximum_scaled_speed) / 2.f;
 
     for(int t = 0; t < size; t++) 
     //Derivation and second Derivation of the Bezier curve to calculate the curvature in each point
@@ -160,8 +158,8 @@ void Planner::calc_K(int size)
         float y_dd = 6*((h-3*g+3*f-e)*step + (g-2*f+e));
 
         //absolute value... 
-        float scaled_speed = 0.1 ; // max steering is 0.5
-        float k = pow(pow(      (x_d*y_dd - y_d*x_dd)/(pow(  (pow(x_d,2.f) + pow(y_d,2.f))   ,3.f/2.f))    ,2.f),0.5f);
+        float scaled_speed; // max steering is 0.5
+        float k = sqrtf(pow( (x_d*y_dd - y_d*x_dd)/(pow( (pow(x_d,2.f) + pow(y_d,2.f)), 3.f/2.f)), 2.f));
 
         if(1/k <= min_radius){
             scaled_speed = minimum_scaled_speed;
@@ -217,7 +215,7 @@ void Planner::calc_ref()
     float unscaled_controller = T_c * ( XTE*anglesgn*K_i - unscaled_ref_angle*K_d); 
     refrence_angle = (unscaled_ref_angle + unscaled_controller)*9/(3.14);
     
-    refrence_speed =  K.coeff(index+1);
+    refrence_speed =  K.coeff(index+3);
     // the return is still found in getRefAngle, in the return pid_c is added.
 }
 

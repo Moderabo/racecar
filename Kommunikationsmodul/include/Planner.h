@@ -76,7 +76,7 @@ private:
     float T_c;
 
     // how many points ahead we look in pure pursit
-    int look_ahead_dist = 3;
+    int look_ahead_dist = 4;
 
     // Private methods used in update, should be called in 
     // the order they are written here

@@ -55,7 +55,7 @@ Gate convertGate(ConePair &cone_pair)
         float yg { gate.x };
         bool left_cone { xgc * xg + ygc * yg > 0 };
 
-        std::cout << left_cone << std::endl;
+        //std::cout << left_cone << std::endl;
         if ( left_cone && (cone_pair.first.r == 120.f/2) )
         {
             gate.type = -1;
@@ -153,7 +153,7 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
         // if the prev gate was a right turn
         case -1:
         {
-            std::cout << "case -1" << std::endl;
+            //std::cout << "case -1" << std::endl;
             Gate next_gate {1e3, 1e3, -0.79f};
             prev_next_gate.second = next_gate;
             break;
@@ -162,7 +162,7 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
         // if the prev gate was a left turn 
         case  1:
         {
-            std::cout << "case 1" << std::endl;
+            //std::cout << "case 1" << std::endl;
             Gate next_gate {1e3, -1e3, 0.79f};
             prev_next_gate.second = next_gate;
             break;
