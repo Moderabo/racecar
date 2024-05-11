@@ -65,6 +65,7 @@ private:
     // state variables
     enum state {calibration, stop, comp, finish};
     state current_state = calibration;
+    float timer;    // Timer for sleep after calibration
 
     // parameters used in controlling the segments
     int segment_nr = -1;

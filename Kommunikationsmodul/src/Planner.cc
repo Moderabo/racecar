@@ -7,41 +7,53 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
 {
     std::cout << "lap: " << lap_nr << std::endl;
 
+    // take out the coordinates from the gates
+    float x_start = prev_gate.x;
+    float y_start = prev_gate.y;
+    float start_angle = prev_gate.angle;
+    float x_goal = next_gate.x;
+    float y_goal = next_gate.y;
+    float goal_angle = next_gate.angle;
+
+    // Determine the number of points in the parameter curve based on distance
+    // between gates
+    float len = sqrtf(pow(x_start-x_goal,2)+pow(y_start-y_goal,2));
+    int size = len / 85;
+    
+    // {\HUGE OBS these functions must be called in this specific order!!}
+
+    // now we calculate the bezier curve (matrices s and P)
+    calc_P(size, x_start, y_start, start_angle,x_goal, y_goal, goal_angle);
+
+    // calculate the curvature in every point (matrix K)
+    calc_K(size);
+
+    // now calculate all the parameters used in controlling the car
+    calc_ref();
+
     // based on the state you should do different things
     switch(current_state) 
     {
     case calibration:     // calibration
     {
-        // take out the coordinates from the gates
-        float x_start = prev_gate.x;
-        float y_start = prev_gate.y;
-        float start_angle = prev_gate.angle;
-        float x_goal = next_gate.x;
-        float y_goal = next_gate.y;
-        float goal_angle = next_gate.angle;
-
-        // Determine the number of points in the parameter curve on distance between gates
-        float len = sqrtf(pow(x_start-x_goal,2)+pow(y_start-y_goal,2));
-        int size = len / 85;
-        
-        // {\HUGE OBS these functions must be called in this specific order!!}
-
-        // now we calculate the bezier curve (matrices s and P)
-        calc_P(size, x_start, y_start, start_angle,x_goal, y_goal, goal_angle);
-
-        // calculate the curvature in every point (matrix K)
-        calc_K(size);
-    
-        // now calculate all the parameters used in controlling the car
-        calc_ref();
+        refrence_speed = 0.1;
 
         // if we should change state
-        if (lap_nr > 0) current_state = stop;
+        if (lap_nr == 0 && next_gate.type == 2)
+        {
+            current_state = stop;
+            timer = 5;
+        }
         break;
     }
 
     case stop:    // stop before comp
     {
+        timer = timer - T_c;
+        if (timer < 0)
+        {
+            current_state = comp;
+        }
         refrence_angle = 0;
         refrence_speed = 0;
         break;
@@ -49,12 +61,15 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
 
     case comp:     // time trials
     {
-        if (lap_nr > 5) current_state = finish;
+        if (lap_nr > 5)
+            current_state = finish;
         break;
     }
 
     case finish: // when the race is finished do nothing!
     {   // TODO: Reset and notify computer module
+        refrence_angle = 0;
+        refrence_speed = 0;
         break;
     }
     }
