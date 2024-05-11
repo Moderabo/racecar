@@ -144,6 +144,10 @@ int main(int argc, const char * argv[])
             int speed = i2c_connection.getSpeed();
             mqtt_connection.pubSpeed( T_c, speed );
         }
+        else 
+        {
+            planner = Planner();
+        }
     }
     return 0;
 }

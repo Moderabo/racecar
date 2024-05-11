@@ -66,7 +66,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
     }
 
     case finish: // when the race is finished do nothing!
-    {   // TODO: Reset and notify computer module
+    {
         refrence_speed = 0;
         break;
     }
