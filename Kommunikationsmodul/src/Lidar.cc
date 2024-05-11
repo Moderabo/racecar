@@ -122,7 +122,7 @@ void Lidar::filter()
 	// Find small clusters
 	for (int i {0}; i < clusters.size(); i++)
 	{
- 		if (clusters.at(i).size() < 3)
+ 		if (clusters.at(i).size() < 2)
     	{
 			small_clusters.push_back(i);
 	    }
@@ -148,12 +148,12 @@ void Lidar::findCones()
         float r { sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) ) / 2 };
         
         // To large to be a cone
-		if ( r > ( 190 + 20 + 10 ) / 2 )
+		if ( r > ( 190 + 60 ) / 2 )
 		{
 			continue;
 		}
         // Large cone
-        else if ( r > ( 120 + 20 ) / 2 )
+        else if ( r > ( 120 + 30 ) / 2 )
         {
             r = 190.f / 2;
         }

@@ -52,7 +52,7 @@ Gate convertGate(ConePair &cone_pair)
         float xgc { cone_pair.first.x - gate.x };
         float ygc { cone_pair.first.y - gate.y };
         float xg { gate.y };
-        float yg { gate.x };
+        float yg { -gate.x };
         bool left_cone { xgc * xg + ygc * yg > 0 };
 
         //std::cout << left_cone << std::endl;
