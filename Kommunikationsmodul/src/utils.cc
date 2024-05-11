@@ -77,7 +77,7 @@ bool validGate(Cone &cone1, Cone &cone2)
     // calculate the distance of the space between two cones 
     float gate_dist_squared { x*x + y*y - cone1.r*cone1.r - cone2.r*cone2.r };
 
-    return gate_dist_squared < 800*800;
+    return gate_dist_squared < 900*900;
 }
 
 

@@ -204,9 +204,20 @@ void Planner::calc_ref()
     CTS = angle_from_tangent;
 
     // get the angle we should turn
-    refrence_angle = (K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS)*9/(3.14);
+    float K_i = 0.005;
+    float K_d = 0.5;
+    float anglesgn = 1.f;
+    //punish on angle diffrence and tangent offset
+    float unscaled_ref_angle = K_p_angle_to_goal * angle_to_goal + K_p_offset_tangent * CTS;
+    if(angle_to_goal < 0)
+    {
+        anglesgn = -1.f;
+    }
+    //Also punish for error to the refrence track and a derivitate state that depens on time
+    float unscaled_controller = T_c * ( XTE*anglesgn*K_i - unscaled_ref_angle*K_d); 
+    refrence_angle = (unscaled_ref_angle + unscaled_controller)*9/(3.14);
     
-    refrence_speed =  K.coeff(index + 3);
+    refrence_speed =  K.coeff(index+1);
     // the return is still found in getRefAngle, in the return pid_c is added.
 }
 
