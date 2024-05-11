@@ -92,7 +92,7 @@ void Planner::calc_P(int size, float x_start, float y_start, float start_angle,
                      float x_goal, float y_goal, float goal_angle)
 {    
     // set all the member variables
-    P = Eigen::MatrixXf(size+5,2); // here we add 5 points after the last gate
+    P = Eigen::MatrixXf(size+10,2); // here we add 5 points after the last gate
     s = Eigen::MatrixXf(4,2);
     Eigen::MatrixXf l(size,4);
 
@@ -129,7 +129,7 @@ void Planner::calc_P(int size, float x_start, float y_start, float start_angle,
 
 void Planner::calc_K(int size)
 {
-    K = Eigen::MatrixXf(size+5,1); //Eigen kan inte K << K, Addpoints1 därav K1
+    K = Eigen::MatrixXf(size+10,1); //Eigen kan inte K << K, Addpoints1 därav K1
     Eigen::MatrixXf K1(size,1);
     
     Eigen::MatrixXf Add_points(K.rows() - size,1);

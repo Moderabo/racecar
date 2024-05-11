@@ -148,7 +148,7 @@ void Lidar::findCones()
         float r { sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) ) / 2 };
         
         // To large to be a cone
-		if ( r > ( 190 + 60 ) / 2 )
+		if ( r > ( 190 + 110 ) / 2 )
 		{
 			continue;
 		}
