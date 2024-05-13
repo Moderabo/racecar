@@ -305,3 +305,11 @@ std::string Planner::getBezier_points()
 
     return ss.str();
 }
+
+std::string Planner::getLap()
+{
+    std::ostringstream ss;
+    ss << lap_nr;
+
+    return ss.str();
+}

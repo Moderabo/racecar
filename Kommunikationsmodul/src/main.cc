@@ -135,6 +135,7 @@ int main(int argc, const char * argv[])
             mqtt_connection.pubCones(cones);
             mqtt_connection.pubBezier(planner.getBezier_points());
             mqtt_connection.pubCurve(planner.getBezier_curve());
+	    mqtt_connection.pubLap(planner.getLap());
 
             float angle_to_steer = planner.getRefAngle();
             angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));

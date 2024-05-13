@@ -32,6 +32,7 @@ public:
     // Get the data in a string format which can be sent over mqtt 
     std::string getBezier_points();
     std::string getBezier_curve();
+    std::string getLap();
 
 private:
     // Member variables
