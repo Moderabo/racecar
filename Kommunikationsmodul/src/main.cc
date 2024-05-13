@@ -44,10 +44,11 @@ int main(int argc, const char * argv[])
     // Initiate LiDAR
     Lidar lidar {};
 
-    Planner bezier{};
+    Planner planner{};
 
-    uint64_t t {0};
-    uint64_t tstart {timestamp()};
+    float T_c {0};
+    float t {0};
+    uint64_t tlast {timestamp()};
     int state {0};
     std::vector<float> commands;
 
@@ -58,8 +59,6 @@ int main(int argc, const char * argv[])
         {
             break;
         }
-
-        t = timestamp() - tstart;
 
         // steer, gas, mode
         commands = mqtt_connection.receiveMsg();
@@ -84,12 +83,12 @@ int main(int argc, const char * argv[])
                     sleep(0.01);
                     break;
                 case 2:  // Automatic
-                    bezier.set_maximum_scaled_speed(commands.at(1));
-                    bezier.set_minimum_scaled_speed(commands.at(2));
-                    bezier.set_min_radius(commands.at(3));
-                    bezier.set_max_radius(commands.at(4));
-                    bezier.set_K_p_angle_to_goal(commands.at(5));
-                    bezier.set_K_p_offset_tangent(commands.at(6));
+                    planner.set_maximum_scaled_speed(commands.at(1));
+                    planner.set_minimum_scaled_speed(commands.at(2));
+                    planner.set_min_radius(commands.at(3));
+                    planner.set_max_radius(commands.at(4));
+                    planner.set_K_p_angle_to_goal(commands.at(5));
+                    planner.set_K_p_offset_tangent(commands.at(6));
                     lidar.start();
                     break;
                 default:
@@ -115,35 +114,39 @@ int main(int argc, const char * argv[])
             //saveCones(cones);
 
             // Find all valid gates
-            std::vector<AltGate> gates;
+            std::vector<Gate> gates;
             gates = findGates(cones);
             //saveGates(gates);
 
             // Find previous and next gate
-            std::pair<AltGate,AltGate> prev_next_gate;
+            std::pair<Gate,Gate> prev_next_gate;
             prev_next_gate = findPrevNextGate(gates);
 
-            AltGate prev_gate { prev_next_gate.first };
-            AltGate next_gate { prev_next_gate.second };
+            Gate prev_gate { prev_next_gate.first };
+            Gate next_gate { prev_next_gate.second };
 
-            // Route planning and calculation of
-            bezier.update(prev_gate.x, prev_gate.y, prev_gate.angle,
-                          next_gate.x, next_gate.y ,next_gate.angle);
+            //Calculation of time diffrence pid.
+            T_c = (timestamp() - tlast) / 1000.f;
+            tlast = timestamp();
+
+            // Route planning and calculation of based on gate positions
+            planner.update(prev_gate, next_gate, T_c);
 
             mqtt_connection.pubCones(cones);
-            mqtt_connection.pubBezier(bezier.getBezier_points());
-            mqtt_connection.pubCurve(bezier.getBezier_curve());
+            mqtt_connection.pubBezier(planner.getBezier_points());
+            mqtt_connection.pubCurve(planner.getBezier_curve());
 
-            float angle_to_steer = bezier.getRefAngle(0, 0, 0);
+            float angle_to_steer = planner.getRefAngle();
             angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));
 
             i2c_connection.steer(angle_to_steer);
-            sleep(0.05);
-            i2c_connection.gas(bezier.getRefSpeed());
-            sleep(0.01);
+            i2c_connection.gas(planner.getRefSpeed());
             int speed = i2c_connection.getSpeed();
-            sleep(0.01);
-            mqtt_connection.pubSpeed( t, speed );
+            mqtt_connection.pubSpeed( T_c, speed );
+        }
+        else 
+        {
+            planner = Planner();
         }
     }
     return 0;
