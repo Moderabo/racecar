@@ -46,23 +46,23 @@ class Interactions(tk.Frame):
         driving_mode_widget.place(x=0, y=30, height=30, width=300)
 
         self.idle_button = tk.Button(driving_mode_widget, bg="#E6E6E6", text="Idle", 
-                                command=lambda:[self.parent.change_driving_mode("idle"), self.new_command("idle")], 
-                                borderwidth=0, highlightthickness=0, bd=3)
+                                    command=lambda: self.new_command("idle"), 
+                                    borderwidth=0, highlightthickness=0, bd=3)
         self.idle_button.place(x=0, y=0, height=30, width=75)
 
         self.auto_button = tk.Button(driving_mode_widget, bg="#E6E6E6", text="Auto",
-                                command=lambda:[self.parent.change_driving_mode("auto"), self.new_command("auto")], 
-                                borderwidth=0, highlightthickness=0, bd=3)
+                                     command=lambda: self.new_command("auto"), 
+                                     borderwidth=0, highlightthickness=0, bd=3)
         self.auto_button.place(x=75, y=0, height=30, width=75)
 
         self.manual_button = tk.Button(driving_mode_widget, bg="#E6E6E6", text="Manual", 
-                                  command=lambda:[self.parent.change_driving_mode("manual"), self.new_command("manual")], 
-                                  borderwidth=0, highlightthickness=0, bd=3)
+                                       command=lambda: self.new_command("manual"),
+                                       borderwidth=0, highlightthickness=0, bd=3)
         self.manual_button.place(x=150, y=0, height=30, width=75)
 
         self.wasd_button = tk.Button(driving_mode_widget, bg="#E6E6E6", text="WASD", 
-                                command=lambda:[self.parent.change_driving_mode("wasd"), self.new_command("wasd")], 
-                                borderwidth=0, highlightthickness=0, bd=3)
+                                     command=lambda: self.new_command("wasd"), 
+                                     borderwidth=0, highlightthickness=0, bd=3)
         self.wasd_button.place(x=225, y=0, height=30, width=75)
 
         self.idle_button.bind("<Enter>", lambda event: self.change_text("Driving mode: Idle \nThe car will stop and stand idle."))
@@ -105,7 +105,7 @@ class Interactions(tk.Frame):
         setup_button.place(x=0, y=0, height=40, width=100)
 
         stop_button = tk.Button(control_widget, bg="#E6E6E6", text="Stop", 
-                                command=lambda:self.parent.change_driving_mode("stop"), 
+                                command=lambda:self.new_command("stop"), 
                                 borderwidth=0, highlightthickness=0, bd=3)
         stop_button.place(x=100, y=0, height=40, width=100)
 
@@ -132,14 +132,23 @@ class Interactions(tk.Frame):
         information.parameters = information.default_parameters
         for i in range(6):
             self.parameters[i].set(information.parameters[i])
-        self.parent.path_widget.reset
+        self.parent.path_widget.reset()
 
     def new_command(self, mode):
+        if mode == "manual" and self.parent.controller.controller_exists() == False:
+            self.change_text("No controller detected.")
+            return
+        try:
+            self.parent.change_driving_mode(mode)
+        except:
+            self.parent.change_driving_mode("stop")
+            self.change_text("ERROR.")
+            return
         self.current_drive_mode = mode
-
     def setup(self):
         try:
             self.parent.setup_mqtt_protocol()
+            self.explanation_widget.configure(text="Connected to car.")
         except:
             self.explanation_widget.configure(text="Could not connect to car.")
 
@@ -155,25 +164,36 @@ class Interactions(tk.Frame):
             except:
                 self.parameter_entries[i].configure(bg="red")
                 continue
+        
+        self.idle_button.configure(bg="#E6E6E6")
+        self.auto_button.configure(bg="#E6E6E6")
+        self.manual_button.configure(bg="#E6E6E6")
+        self.wasd_button.configure(bg="#E6E6E6")
+
         if self.current_drive_mode == "idle":
             self.idle_button.configure(bg="gray")
-            self.auto_button.configure(bg="#E6E6E6")
-            self.manual_button.configure(bg="#E6E6E6")
-            self.wasd_button.configure(bg="#E6E6E6")
+            #self.auto_button.configure(bg="#E6E6E6")
+            #self.manual_button.configure(bg="#E6E6E6")
+            #self.wasd_button.configure(bg="#E6E6E6")
         elif self.current_drive_mode == "auto":
-            self.idle_button.configure(bg="#E6E6E6")
+            #self.idle_button.configure(bg="#E6E6E6")
             self.auto_button.configure(bg="gray")
-            self.manual_button.configure(bg="#E6E6E6")
-            self.wasd_button.configure(bg="#E6E6E6")
+            #self.manual_button.configure(bg="#E6E6E6")
+            #self.wasd_button.configure(bg="#E6E6E6")
         elif self.current_drive_mode == "manual":
-            self.idle_button.configure(bg="#E6E6E6")
-            self.auto_button.configure(bg="#E6E6E6")
+            #self.idle_button.configure(bg="#E6E6E6")
+            #self.auto_button.configure(bg="#E6E6E6")
             self.manual_button.configure(bg="gray")
-            self.wasd_button.configure(bg="#E6E6E6")
+            #self.wasd_button.configure(bg="#E6E6E6")
         elif self.current_drive_mode == "wasd":
-            self.idle_button.configure(bg="#E6E6E6")
-            self.auto_button.configure(bg="#E6E6E6")
-            self.manual_button.configure(bg="#E6E6E6")
+            #self.idle_button.configure(bg="#E6E6E6")
+            #self.auto_button.configure(bg="#E6E6E6")
+            #self.manual_button.configure(bg="#E6E6E6")
             self.wasd_button.configure(bg="gray")
+        #else:
+            #self.idle_button.configure(bg="#E6E6E6")
+            #self.auto_button.configure(bg="#E6E6E6")
+            #self.manual_button.configure(bg="#E6E6E6")
+            #self.wasd_button.configure(bg="#E6E6E6")
             
         return
