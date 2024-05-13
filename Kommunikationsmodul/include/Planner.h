@@ -41,6 +41,14 @@ private:
     float K_p_angle_to_goal;
     float K_p_offset_tangent;
 
+    // Segments
+    struct {
+        Gate gate;
+        int n;
+        Gate last_gate;
+    } Segment 
+    std::vector<Segment> segments;
+
     // contains all the points on the bezier curve
     Eigen::MatrixXf P;
 
@@ -49,6 +57,7 @@ private:
 
     // the 4 points that define the bezier curve
     Eigen::MatrixXf s;
+    Eigen::MatrixXf s_next;
 
     // default values used for determining speed 
     float min_radius = 800.f;
@@ -83,11 +92,19 @@ private:
     // the order they are written here
     //==========================================================
 
+    // update segment
+    void update_segment(Gate& prev_gate, Gate& next_gate);
+    Gate calc_next_gate(Gate&, int);
+    Gate calc_prev_gate(Gate&, int);
+
     // calculate the parameter curve
     void calc_P(int size, float x_start, float y_start, float start_angle,
                 float x_goal, float y_goal, float goal_angle);
+    void calc_P_comp(int, float, float, float, float, float, float, int,
+                     float, float, float);
     // calculate the curvature of the curve in each point
     void calc_K(int size);
+    void calc_K_comp(int size, int);
     // calculat the all the usefull stuff, this requires P and K
     void calc_ref();
 };

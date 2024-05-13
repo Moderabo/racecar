@@ -151,7 +151,7 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
         case -1:
         {
             //std::cout << "case -1" << std::endl;
-            Gate next_gate {1e3, 1e3, 0.79f};
+            Gate next_gate {1e3, 1e3, 0.79f, -2};
             prev_next_gate.second = next_gate;
             break;
         }
@@ -160,7 +160,7 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
         case  1:
         {
             //std::cout << "case 1" << std::endl;
-            Gate next_gate {1e3, -1e3, -0.79f};
+            Gate next_gate {1e3, -1e3, -0.79f, -2};
             prev_next_gate.second = next_gate;
             break;
         }
@@ -168,7 +168,7 @@ std::pair<Gate,Gate> findPrevNextGate(std::vector<Gate> &gates)
         default:
         {
             // If no next is found, add one in front of the car
-            Gate next_gate {1e3, 0, 0};
+            Gate next_gate {1e3, 0, 0, -2};
             prev_next_gate.second = next_gate;
             break;
         }
