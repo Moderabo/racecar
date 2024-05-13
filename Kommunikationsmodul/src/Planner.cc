@@ -65,6 +65,22 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
 
     case finish: // when the race is finished do nothing!
     {
+        if (timer < 0)
+        {
+            timer = 0.5;
+            if (refrence_angle < 0)
+            {
+                refrence_angle = 1;
+            }
+            else 
+            {
+                refrence_angle = -1;
+            }
+        }
+        else
+        {
+            timer -= T_c;
+        }
         refrence_speed = 0;
         break;
     }

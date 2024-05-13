@@ -52,6 +52,12 @@ int main(int argc, const char * argv[])
     int state {0};
     std::vector<float> commands;
 
+    i2c_connection.steer(-1);
+    sleep(1);
+    i2c_connection.steer(1);
+    sleep(1);
+    i2c_connection.steer(0);
+
     // fetch result and print it out
     while ( true )
     {
