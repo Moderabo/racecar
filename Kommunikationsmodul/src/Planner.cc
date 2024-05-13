@@ -5,8 +5,6 @@
 
 void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
 {
-    std::cout << "lap: " << lap_nr << std::endl;
-
     // take out the coordinates from the gates
     float x_start = prev_gate.x;
     float y_start = prev_gate.y;
@@ -42,7 +40,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         if (lap_nr == 0 && next_gate.type == 2 && sqrtf(pow(x_goal,2)+pow(y_goal,2)) < 1000)
         {
             current_state = stop;
-            timer = 5;
+            timer = 3;
         }
         break;
     }
@@ -80,6 +78,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         {
             segment_nr = 0;
             lap_nr += 1;
+            std::cout << "lap: " << lap_nr << std::endl;
         }
     }
         
