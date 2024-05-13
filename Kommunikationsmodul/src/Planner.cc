@@ -67,34 +67,34 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         
         if (prev_gate.type != -2 || next_gate.type != -2)
         {
-            float prev_gate_dist {pow(prev_gate.x,2)+pow(prev_gate.y,2)};
-            float next_gate_dist {pow(next_gate.x,2)+pow(next_gate.y,2)};
+            float prev_gate_dist {powf(prev_gate.x,2)+powf(prev_gate.y,2)};
+            float next_gate_dist {powf(next_gate.x,2)+powf(next_gate.y,2)};
             
             if (prev_gate_dist < next_gate_dist)
             {
-                next_gate = calc_next_gate(prev_gate, segment);
-                next_next_gate = calc_next_gate(next_gate, segment+1 % size(segment);
+                next_gate = calc_next_gate(prev_gate, segment_nr);
+                next_next_gate = calc_next_gate(next_gate, (segment_nr+1) % (segments.size()-1));
             }
             else
             {
-                prev_gate = calc_prev_gate(next_gate, segment);
-                next_next_gate = calc_next_gate(next_gate, segment+1 % size(segment);
+                prev_gate = calc_prev_gate(next_gate, segment_nr);
+                next_next_gate = calc_next_gate(next_gate, (segment_nr+1) % (segments.size()-1));
             }
         }
         else if (prev_gate.type != -2)
         {
-            next_gate = calc_next_gate(prev_gate, segment);
-            next_next_gate = calc_next_gate(next_gate, segment+1 % size(segment);
+            next_gate = calc_next_gate(prev_gate, segment_nr);
+            next_next_gate = calc_next_gate(next_gate, (segment_nr+1) % (segments.size()-1));
         }
         else if (next_gate.type != -2)
         {
-            prev_gate = calc_prev_gate(next_gate, segment);
-            next_next_gate = calc_next_gate(next_gate, segment+1 % size(segment);
+            prev_gate = calc_prev_gate(next_gate, segment_nr);
+            next_next_gate = calc_next_gate(next_gate, (segment_nr+1) % (segments.size()-1));
         }
         else
         {
-            next_gate = calc_next_gate(prev_gate, segment);
-            next_next_gate = calc_next_gate(next_gate, segment+1 % size(segment);
+            next_gate = calc_next_gate(prev_gate, segment_nr);
+            next_next_gate = calc_next_gate(next_gate, (segment_nr+1) % (segments.size()-1));
         }
 
         // take out the coordinates from the gates
@@ -119,10 +119,10 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
 
         // now we calculate the bezier curve (matrices s and P)
         calc_P_comp(size, x_start, y_start, start_angle,x_goal, y_goal,
-                    goal_angle, size_next, );
+                    goal_angle, size_next, x_goal_next, y_goal_next, goal_angle_next);
 
         // calculate the curvature in every point (matrix K)
-        calc_K(size, size_next);
+        calc_K_comp(size, size_next);
 
         // now calculate all the parameters used in controlling the car
         calc_ref();
@@ -175,17 +175,17 @@ void Planner::update_segment(Gate& prev_gate, Gate& next_gate)
     float y_pre {next_gate.y - prev_gate.y};
     float angle {next_gate.angle - prev_gate.angle};
     
-    float x {x_pre*cos(-prev_gate.angle)-y_pre*sin(-prev_gate.angle)};
-    float y {x_pre*sin(-prev_gate.angle)+y_pre*cos(-prev_gate.angle)};
+    float x {x_pre*cosf(-prev_gate.angle)-y_pre*sinf(-prev_gate.angle)};
+    float y {x_pre*sinf(-prev_gate.angle)+y_pre*cosf(-prev_gate.angle)};
     
-    if (segment_nr >= size(segments))
+    if (segment_nr >= segments.size())
     {
         Gate gate {x, y, angle};
-        segments.push_back(gate);
+        segments.push_back({gate});
         return;
     }
 
-    segment.at(segment_nr).n++;
+    int n = ++segments.at(segment_nr).n;
     
     Gate gate = segments.at(segment_nr).gate;
     Gate last_gate = segments.at(segment_nr).last_gate;
@@ -193,18 +193,20 @@ void Planner::update_segment(Gate& prev_gate, Gate& next_gate)
     gate.y += (y - last_gate.y) / n;
     gate.angle += (angle - last_gate.angle) / n;
 
+    segments.at(segment_nr).gate = gate;
+    segments.at(segment_nr).last_gate = {x, y, angle};
 }
 
-Gate calc_next_gate(Gate& gate, int seg_nr)
+Gate Planner::calc_next_gate(Gate& gate, int seg_nr)
 {
     // 
-    float angle_pre = segment.at(seg_nr).gate.angle;
-    float x_pre = segment.at(seg_nr).gate.x;
-    float y_pre = segment.at(seg_nr).gate.y;
+    float angle_pre = segments.at(seg_nr).gate.angle;
+    float x_pre = segments.at(seg_nr).gate.x;
+    float y_pre = segments.at(seg_nr).gate.y;
 
     // Rotate saved segment to prev_gate coordinate system
-    float x {x_pre*cos(prev_gate.angle)-y_pre*sin(prev_gate.angle)};
-    float y {x_pre*sin(prev_gate.angle)+y_pre*cos(prev_gate.angle)};
+    float x {x_pre*cosf(gate.angle)-y_pre*sinf(gate.angle)};
+    float y {x_pre*sinf(gate.angle)+y_pre*cosf(gate.angle)};
 
     // Calculate new position
     Gate next_gate;
@@ -215,14 +217,14 @@ Gate calc_next_gate(Gate& gate, int seg_nr)
     return next_gate;
 }
 
-Gate calc_prev_gate(Gate& gate, int seg_nr)
+Gate Planner::calc_prev_gate(Gate& gate, int seg_nr)
 {
-    float angle_pre = segment.at(seg_nr).gate.angle;
-    float x_pre = segment.at(seg_nr).gate.x;
-    float y_pre = segment.at(seg_nr).gate.y;
+    float angle_pre = segments.at(seg_nr).gate.angle;
+    float x_pre = segments.at(seg_nr).gate.x;
+    float y_pre = segments.at(seg_nr).gate.y;
 
-    float x {x_pre*cos(prev_gate.angle)-y_pre*sin(prev_gate.angle)};
-    float y {x_pre*sin(prev_gate.angle)+y_pre*cos(prev_gate.angle)};
+    float x {x_pre*cosf(gate.angle)-y_pre*sinf(gate.angle)};
+    float y {x_pre*sinf(gate.angle)+y_pre*cosf(gate.angle)};
 
     Gate next_gate;
     next_gate.x = gate.x - x;
@@ -288,7 +290,6 @@ void Planner::calc_P_comp(int size, float x_start, float y_start, float start_an
     s.row(2) << (x_goal - 0.3f*len*cos(goal_angle)), (y_goal - 0.3f*len*sin(goal_angle));
     s.row(3) << x_goal, y_goal;
 
-    Eigen::RowVectorXf distance_vec(size);
     for(int u = 0; u < size; u++){ 
 
         float a = (u)/(size-1.f);
@@ -301,20 +302,18 @@ void Planner::calc_P_comp(int size, float x_start, float y_start, float start_an
         l.row(u) << l1, l2, l3, l4;
 
     }
-    P << l*s;
 
     s_next = Eigen::MatrixXf(4,2);
-    Eigen::MatrixXf l_next(size,4);
+    Eigen::MatrixXf l_next(size_next,4);
 
     len = pow(pow(x_goal-x_goal_next,2)+pow(y_goal-y_goal_next,2),0.5f);
 
     //Position in s matrix
-    s.row(0) << x_goal, y_goal;
-    s.row(1) << (x_goal + 0.3f*len*cos(goal_angle)), (y_start + 0.3f*len*sin(goal_angle));
-    s.row(2) << (x_goal_next - 0.3f*len*cos(goal_angle_next)), (y_goal_next - 0.3f*len*sin(goal_angle_next));
-    s.row(3) << x_goal_next, y_goal_next;
+    s_next.row(0) << x_goal, y_goal;
+    s_next.row(1) << (x_goal + 0.3f*len*cos(goal_angle)), (y_start + 0.3f*len*sin(goal_angle));
+    s_next.row(2) << (x_goal_next - 0.3f*len*cos(goal_angle_next)), (y_goal_next - 0.3f*len*sin(goal_angle_next));
+    s_next.row(3) << x_goal_next, y_goal_next;
 
-    Eigen::RowVectorXf distance_vec(size_next);
     for(int u = 0; u < size; u++){ 
 
         float a = (u)/(size-1.f);
@@ -324,10 +323,10 @@ void Planner::calc_P_comp(int size, float x_start, float y_start, float start_an
         float l3 = 3*(1.f-a)*pow((a),(2));
         float l4 = pow((a),(3));
 
-        l.row(u) << l1, l2, l3, l4;
+        l_next.row(u) << l1, l2, l3, l4;
 
     }
-    P << l*s_next;
+    P << l*s, l_next*s_next;
 }
 
 void Planner::calc_K(int size)

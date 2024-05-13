@@ -42,11 +42,11 @@ private:
     float K_p_offset_tangent;
 
     // Segments
-    struct {
+    struct Segment{
         Gate gate;
         int n;
         Gate last_gate;
-    } Segment 
+    };
     std::vector<Segment> segments;
 
     // contains all the points on the bezier curve
