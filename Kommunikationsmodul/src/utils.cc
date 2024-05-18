@@ -237,19 +237,16 @@ void saveCones(std::vector<Cone> &cones)
 }
 
 
-void saveGates(std::vector<ConePair> &cone_pairs)
+void saveGates(std::vector<Gate> &gates)
 {
 	std::ofstream file;
 	file.open("gates.csv");
 
-	for (auto &cone_pair : cone_pairs)
+	for (auto &gate : gates)
 	{
-		file << cone_pair.first.x  << ','
-             << cone_pair.first.y  << ','
-             << cone_pair.first.r  << ','
-             << cone_pair.second.x << ','
-             << cone_pair.second.y << ','
-             << cone_pair.second.r << ',' << '\n';
+		file << gate.x  << ','
+             << gate.y  << ','
+             << gate.angle  << ',' << '\n';
 	}
 
 	file.close();

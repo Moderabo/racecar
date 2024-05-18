@@ -98,6 +98,7 @@ private:
     Gate calc_prev_gate(Gate&, int);
 
     // calculate the parameter curve
+    Eigen::MatrixXf calc_s(float, float, float, float, float, float);
     Eigen::MatrixXf calc_P(int size, Eigen::MatrixXf const& s);
     Eigen::MatrixXf calc_P_endpoints(int, float, float, float);
     // calculate the curvature of the curve in each point

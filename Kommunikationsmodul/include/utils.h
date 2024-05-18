@@ -61,7 +61,7 @@ void saveClusters(std::vector<Cluster> &clusters);
 void saveCones(std::vector<Cone> &cones);
 
 
-void saveGates(std::vector<ConePair> &);
+void saveGates(std::vector<Gate> &);
 
 #endif
 

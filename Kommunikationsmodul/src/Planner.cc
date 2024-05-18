@@ -5,12 +5,46 @@
 
 void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
 {
+    // here we do some stupid stuff to check if we have passed a gate or not
+    if (in_a_gate && !isInGate(prev_gate))
+    {
+        segment_nr += 1;
+        if (in_goal)
+        {
+            segment_nr = 0;
+            lap_nr += 1;
+            std::cout << "lap: " << lap_nr << std::endl;
+        }
+        std::cout << "Segment: " << segment_nr << std::endl;
+    }
+        
+    if (isInGate(prev_gate))
+    {
+        in_a_gate = true;
+        if (prev_gate.type == 2)
+        {
+            in_goal = true;
+        }
+    }
+    else
+    {
+        in_a_gate = false;
+        in_goal = false;
+    }
+
     // based on the state you should do different things
     switch(current_state) 
     {
     case calibration:     // calibration
     {
-        update_segment(prev_gate, next_gate);
+        if (prev_gate.type != -2 && next_gate.type != -2
+            && segment_nr >= 0 && !in_a_gate)
+        {
+            update_segment(prev_gate, next_gate);
+            //Gate gate_tmp {segments.at(segment_nr).gate};
+            //std::cout << "x: " << gate_tmp.x << "\ty: " << gate_tmp.y
+            //          << "\tangle: " << gate_tmp.angle << std::endl;
+        }
 
         // take out the coordinates from the gates
         float x_start = prev_gate.x;
@@ -28,7 +62,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         // {\HUGE OBS these functions must be called in this specific order!!}
 
         // now we calculate the bezier curve (matrices s and P)
-        P = Eigen::MatrixXf{size+10};
+        P = Eigen::MatrixXf {size+10, 2};
         Eigen::MatrixXf P_curr;
         Eigen::MatrixXf P_next;
         s_curr = calc_s(x_start, y_start, start_angle,
@@ -38,7 +72,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         P << P_curr, P_next;
 
         // calculate the curvature in every point (matrix K)
-        K = Eigen::MatrixXf{size+10};
+        K = Eigen::MatrixXf{size+10, 1};
         K << calc_K(size, s_curr), calc_K_endpoints(10);
 
         // now calculate all the parameters used in controlling the car
@@ -73,7 +107,12 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
 
         Gate next_next_gate;
         
-        if (prev_gate.type != -2 && next_gate.type != -2)
+        if (in_a_gate && isInGate(prev_gate))
+        {
+                next_gate = prev_gate;
+                prev_gate = calc_prev_gate(next_gate, segment_nr);
+        }
+        else if (prev_gate.type != -2 && next_gate.type != -2)
         {
             float prev_gate_dist {powf(prev_gate.x,2)+powf(prev_gate.y,2)};
             float next_gate_dist {powf(next_gate.x,2)+powf(next_gate.y,2)};
@@ -96,7 +135,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
             next_gate = calc_next_gate(prev_gate, segment_nr);
         }
         next_next_gate = calc_next_gate(next_gate,
-                                        (segment_nr+1) % (segments.size()-1));
+                                        (segment_nr+1) % segments.size());
 
         // take out the coordinates from the gates
         float x_start = prev_gate.x;
@@ -120,7 +159,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         // {\HUGE OBS these functions must be called in this specific order!!}
 
         // now we calculate the bezier curve (matrices s and P)
-        P = Eigen::MatrixXf{size+size_next};
+        P = Eigen::MatrixXf {size+size_next, 2};
         Eigen::MatrixXf P_curr;
         Eigen::MatrixXf P_next;
         s_curr = calc_s(x_start, y_start, start_angle,
@@ -132,7 +171,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         P << P_curr, P_next;
 
         // calculate the curvature in every point (matrix K)
-        K = Eigen::MatrixXf{size+size_next};
+        K = Eigen::MatrixXf{size+size_next, 1};
         K << calc_K(size, s_curr), calc_K(size_next, s_next);
 
         // now calculate all the parameters used in controlling the car
@@ -147,40 +186,10 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         break;
     }
     }
-
-    // here we do some stupid stuff to check if we have passed a gate or not
-    if (in_a_gate && !isInGate(prev_gate))
-    {
-        segment_nr += 1;
-        if (in_goal)
-        {
-            segment_nr = 0;
-            lap_nr += 1;
-            std::cout << "lap: " << lap_nr << std::endl;
-        }
-    }
-        
-    if (isInGate(prev_gate))
-    {
-        in_a_gate = true;
-        if (prev_gate.type == 2)
-        {
-            in_goal = true;
-        }
-    }
-    else
-    {
-        in_a_gate = false;
-        in_goal = false;
-    }
 }
 
 void Planner::update_segment(Gate& prev_gate, Gate& next_gate)
 {
-    if (prev_gate.type == -2 || next_gate.type == -2 || segment_nr < 0)
-    {
-        return;
-    }
     // Pre-rotation
     float x_pre {next_gate.x - prev_gate.x};
     float y_pre {next_gate.y - prev_gate.y};
@@ -192,19 +201,20 @@ void Planner::update_segment(Gate& prev_gate, Gate& next_gate)
     if (segment_nr >= segments.size())
     {
         Gate gate {x, y, angle};
-        segments.push_back({gate});
+        segments.push_back({gate, 1, gate});
         return;
     }
 
+    // Calculate iterative mean of points
     int n = ++segments.at(segment_nr).n;
     
-    Gate gate = segments.at(segment_nr).gate;
+    Gate mean_gate = segments.at(segment_nr).gate;
     Gate last_gate = segments.at(segment_nr).last_gate;
-    gate.x += (x - last_gate.x) / n;
-    gate.y += (y - last_gate.y) / n;
-    gate.angle += (angle - last_gate.angle) / n;
+    mean_gate.x += (x - last_gate.x) / n;
+    mean_gate.y += (y - last_gate.y) / n;
+    mean_gate.angle += (angle - last_gate.angle) / n;
 
-    segments.at(segment_nr).gate = gate;
+    segments.at(segment_nr).gate = mean_gate;
     segments.at(segment_nr).last_gate = {x, y, angle};
 }
 
@@ -223,24 +233,24 @@ Gate Planner::calc_next_gate(Gate& gate, int seg_nr)
     Gate next_gate;
     next_gate.x = gate.x + x;
     next_gate.y = gate.y + y;
-    next_gate.angle = angle_pre - gate.angle;
+    next_gate.angle = gate.angle + angle_pre;
 
     return next_gate;
 }
 
 Gate Planner::calc_prev_gate(Gate& gate, int seg_nr)
 {
-    float angle_pre = segments.at(seg_nr).gate.angle;
-    float x_pre = segments.at(seg_nr).gate.x;
+    float angle_pre = -segments.at(seg_nr).gate.angle;
+    float x_pre = -segments.at(seg_nr).gate.x;
     float y_pre = segments.at(seg_nr).gate.y;
 
     float x {x_pre*cosf(gate.angle)-y_pre*sinf(gate.angle)};
     float y {x_pre*sinf(gate.angle)+y_pre*cosf(gate.angle)};
 
     Gate next_gate;
-    next_gate.x = gate.x - x;
-    next_gate.y = gate.y - y;
-    next_gate.angle = angle_pre - gate.angle;
+    next_gate.x = gate.x + x;
+    next_gate.y = gate.y + y;
+    next_gate.angle = gate.angle + angle_pre;
 
     return next_gate;
 }
@@ -345,6 +355,7 @@ Eigen::MatrixXf Planner::calc_K_endpoints(int size)
     {
         points.row(i) << minimum_scaled_speed;
     }
+    return points;
 }
 
 void Planner::calc_ref()
@@ -443,7 +454,7 @@ float Planner::get_CTS()
 
 Eigen::MatrixXf Planner::get_Bezier_mat()
 {
-    return s;
+    return s_curr;
 }
 
 std::string Planner::getBezier_curve()
@@ -467,3 +478,4 @@ std::string Planner::getBezier_points()
 
     return ss.str();
 }
+
