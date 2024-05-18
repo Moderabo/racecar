@@ -67,19 +67,21 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
     {
         if (timer < 0)
         {
-            timer = 0.5;
-            if (refrence_angle < 0)
+            timer += T_c;
+            if (timer > 0)
             {
-                refrence_angle = 1;
+                timer = 0.5;
             }
-            else 
-            {
-                refrence_angle = -1;
-            }
+            refrence_angle = -1;
         }
         else
         {
             timer -= T_c;
+            if (timer < 0)
+            {
+                timer = -0.5;
+            }
+            refrence_angle = 1;
         }
         refrence_speed = 0;
         break;
