@@ -28,10 +28,18 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         // {\HUGE OBS these functions must be called in this specific order!!}
 
         // now we calculate the bezier curve (matrices s and P)
-        calc_P(size, x_start, y_start, start_angle,x_goal, y_goal, goal_angle);
+        P = Eigen::MatrixXf{size+10};
+        Eigen::MatrixXf P_curr;
+        Eigen::MatrixXf P_next;
+        s_curr = calc_s(x_start, y_start, start_angle,
+                        x_goal,  y_goal,  goal_angle);
+        P_curr = calc_P(size, s_curr);
+        P_next = calc_P_endpoints(10, x_goal, y_goal, goal_angle);
+        P << P_curr, P_next;
 
         // calculate the curvature in every point (matrix K)
-        calc_K(size);
+        K = Eigen::MatrixXf{size+10};
+        K << calc_K(size, s_curr), calc_K_endpoints(10);
 
         // now calculate all the parameters used in controlling the car
         calc_ref();
@@ -65,7 +73,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
 
         Gate next_next_gate;
         
-        if (prev_gate.type != -2 || next_gate.type != -2)
+        if (prev_gate.type != -2 && next_gate.type != -2)
         {
             float prev_gate_dist {powf(prev_gate.x,2)+powf(prev_gate.y,2)};
             float next_gate_dist {powf(next_gate.x,2)+powf(next_gate.y,2)};
@@ -73,29 +81,22 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
             if (prev_gate_dist < next_gate_dist)
             {
                 next_gate = calc_next_gate(prev_gate, segment_nr);
-                next_next_gate = calc_next_gate(next_gate, (segment_nr+1) % (segments.size()-1));
             }
             else
             {
                 prev_gate = calc_prev_gate(next_gate, segment_nr);
-                next_next_gate = calc_next_gate(next_gate, (segment_nr+1) % (segments.size()-1));
             }
-        }
-        else if (prev_gate.type != -2)
-        {
-            next_gate = calc_next_gate(prev_gate, segment_nr);
-            next_next_gate = calc_next_gate(next_gate, (segment_nr+1) % (segments.size()-1));
         }
         else if (next_gate.type != -2)
         {
             prev_gate = calc_prev_gate(next_gate, segment_nr);
-            next_next_gate = calc_next_gate(next_gate, (segment_nr+1) % (segments.size()-1));
         }
-        else
+        else  // Use previous gate if next gate is not the only actual gate 
         {
             next_gate = calc_next_gate(prev_gate, segment_nr);
-            next_next_gate = calc_next_gate(next_gate, (segment_nr+1) % (segments.size()-1));
         }
+        next_next_gate = calc_next_gate(next_gate,
+                                        (segment_nr+1) % (segments.size()-1));
 
         // take out the coordinates from the gates
         float x_start = prev_gate.x;
@@ -112,17 +113,27 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         // between gates
         float len = sqrtf(pow(x_start-x_goal,2)+pow(y_start-y_goal,2));
         int size = len / 85;
-        float len_next = sqrtf(pow(x_goal-x_goal_next,2)+pow(y_goal-y_goal_next,2));
+        float len_next = sqrtf(pow(x_goal-x_goal_next,2)
+                               + pow(y_goal-y_goal_next,2));
         int size_next = len_next / 85;
         
         // {\HUGE OBS these functions must be called in this specific order!!}
 
         // now we calculate the bezier curve (matrices s and P)
-        calc_P_comp(size, x_start, y_start, start_angle,x_goal, y_goal,
-                    goal_angle, size_next, x_goal_next, y_goal_next, goal_angle_next);
+        P = Eigen::MatrixXf{size+size_next};
+        Eigen::MatrixXf P_curr;
+        Eigen::MatrixXf P_next;
+        s_curr = calc_s(x_start, y_start, start_angle,
+                        x_goal,  y_goal,  goal_angle);
+        s_next = calc_s(x_goal, y_goal, goal_angle,
+                        x_goal_next, y_goal_next, goal_angle_next);
+        P_curr = calc_P(size, s_curr);
+        P_next = calc_P(size_next, s_next);
+        P << P_curr, P_next;
 
         // calculate the curvature in every point (matrix K)
-        calc_K_comp(size, size_next);
+        K = Eigen::MatrixXf{size+size_next};
+        K << calc_K(size, s_curr), calc_K(size_next, s_next);
 
         // now calculate all the parameters used in controlling the car
         calc_ref();
@@ -234,25 +245,28 @@ Gate Planner::calc_prev_gate(Gate& gate, int seg_nr)
     return next_gate;
 }
 
-void Planner::calc_P(int size, float x_start, float y_start, float start_angle,
-                     float x_goal, float y_goal, float goal_angle)
-{    
-    // set all the member variables
-    P = Eigen::MatrixXf(size+10,2); // here we add 5 points after the last gate
-    s = Eigen::MatrixXf(4,2);
-    Eigen::MatrixXf l(size,4);
-
-    float len = pow(pow(x_start-x_goal,2)+pow(y_start-y_goal,2),0.5f);
+Eigen::MatrixXf Planner::calc_s(float x_start, float y_start, float start_angle,
+                                float x_goal, float y_goal, float goal_angle)
+{
+    Eigen::MatrixXf s {4,2};
+    float len = sqrtf(pow(x_start-x_goal,2)+pow(y_start-y_goal,2));
 
     //Position in s matrix
     s.row(0) << x_start, y_start;
     s.row(1) << (x_start + 0.3f*len*cos(start_angle)), (y_start + 0.3f*len*sin(start_angle));
     s.row(2) << (x_goal - 0.3f*len*cos(goal_angle)), (y_goal - 0.3f*len*sin(goal_angle));
     s.row(3) << x_goal, y_goal;
+    return s;
+}
+
+Eigen::MatrixXf Planner::calc_P(int size, Eigen::MatrixXf const& s)
+{    
+    //P_tmp = Eigen::MatrixXf(size,2); // here we add 5 points after the last gate
+    Eigen::MatrixXf l {size,4};
 
     Eigen::RowVectorXf distance_vec(size);
-    for(int u = 0; u < size; u++){ 
-
+    for(int u = 0; u < size; u++)
+    { 
         float a = (u)/(size-1.f);
 
         float l1 = pow((1.f-a),(3));
@@ -261,127 +275,26 @@ void Planner::calc_P(int size, float x_start, float y_start, float start_angle,
         float l4 = pow((a),(3));
 
         l.row(u) << l1, l2, l3, l4;
-
     }
+    //P_tmp << l*s_tmp;
+    return l*s;
+}
+
+Eigen::MatrixXf Planner::calc_P_endpoints(int size, float x, float y, float angle)
+{
+    Eigen::MatrixXf points {size,2};
     // Here we add the extra points after the gate
-    Eigen::MatrixXf Add_points(P.rows() - size,2);
-    for(int i = 1; i <= P.rows()-size; i++)
+    for(int i = 0; i < points.rows(); i++)
     {
-        Add_points.row(i-1) << (x_goal + 100*i*cos(goal_angle)), (y_goal + 100*i*sin(goal_angle));
-
+        points.row(i) << (x + 100*i*cos(angle)), (y + 100*i*sin(angle));
     }
-    P << l*s,  Add_points;
+    return points;
 }
-
-void Planner::calc_P_comp(int size, float x_start, float y_start, float start_angle,
-                     float x_goal, float y_goal, float goal_angle,
-                     int size_next, float x_goal_next, float y_goal_next, float goal_angle_next)
-{    
-    // set all the member variables
-    P = Eigen::MatrixXf(size+size_next,2); // here we add 5 points after the last gate
-    s = Eigen::MatrixXf(4,2);
-    Eigen::MatrixXf l(size,4);
-
-    float len = pow(pow(x_start-x_goal,2)+pow(y_start-y_goal,2),0.5f);
-
-    //Position in s matrix
-    s.row(0) << x_start, y_start;
-    s.row(1) << (x_start + 0.3f*len*cos(start_angle)), (y_start + 0.3f*len*sin(start_angle));
-    s.row(2) << (x_goal - 0.3f*len*cos(goal_angle)), (y_goal - 0.3f*len*sin(goal_angle));
-    s.row(3) << x_goal, y_goal;
-
-    for(int u = 0; u < size; u++){ 
-
-        float a = (u)/(size-1.f);
-
-        float l1 = pow((1.f-a),(3));
-        float l2 = 3*pow((1.f-a),(2))*(a);
-        float l3 = 3*(1.f-a)*pow((a),(2));
-        float l4 = pow((a),(3));
-
-        l.row(u) << l1, l2, l3, l4;
-
-    }
-
-    s_next = Eigen::MatrixXf(4,2);
-    Eigen::MatrixXf l_next(size_next,4);
-
-    len = pow(pow(x_goal-x_goal_next,2)+pow(y_goal-y_goal_next,2),0.5f);
-
-    //Position in s matrix
-    s_next.row(0) << x_goal, y_goal;
-    s_next.row(1) << (x_goal + 0.3f*len*cos(goal_angle)), (y_start + 0.3f*len*sin(goal_angle));
-    s_next.row(2) << (x_goal_next - 0.3f*len*cos(goal_angle_next)), (y_goal_next - 0.3f*len*sin(goal_angle_next));
-    s_next.row(3) << x_goal_next, y_goal_next;
-
-    for(int u = 0; u < size; u++){ 
-
-        float a = (u)/(size-1.f);
-
-        float l1 = pow((1.f-a),(3));
-        float l2 = 3*pow((1.f-a),(2))*(a);
-        float l3 = 3*(1.f-a)*pow((a),(2));
-        float l4 = pow((a),(3));
-
-        l_next.row(u) << l1, l2, l3, l4;
-
-    }
-    P << l*s, l_next*s_next;
-}
-
-void Planner::calc_K(int size)
-{
-    K = Eigen::MatrixXf(size+10,1); //Eigen kan inte K << K, Addpoints1 därav K1
-    Eigen::MatrixXf K1(size,1);
     
-    Eigen::MatrixXf Add_points(K.rows() - size,1);
-    for(int i = 1; i <= P.rows()-size; i++)
-        Add_points.row(i-1) << minimum_scaled_speed;
 
-    for(int t = 0; t < size; t++) 
-    //Derivation and second Derivation of the Bezier curve to calculate the curvature in each point
-    {
-        float step = t / (size*1.0f);
-        float a = s.coeff(0,0);
-        float b = s.coeff(1,0);
-        float c = s.coeff(2,0);
-        float d = s.coeff(3,0);
-        float e = s.coeff(0,1);
-        float f = s.coeff(1,1);
-        float g = s.coeff(2,1);
-        float h = s.coeff(3,1);
-
-        float x_d = 3*((d-3*c+3*b-a)*pow(step,2) + 2*(c-2*b+a)*step + (b-a));
-
-        float y_d = 3*((h-3*g+3*f-e)*pow(step,2) + 2*(g-2*f+e)*step + (f-e));
-
-        float x_dd = 6*((d-3*c+3*b-a)*step + (c-2*b+a));
-
-        float y_dd = 6*((h-3*g+3*f-e)*step + (g-2*f+e));
-
-        //absolute value... 
-        float scaled_speed; // max steering is 0.5
-        float k = sqrtf(pow( (x_d*y_dd - y_d*x_dd)/(pow( (pow(x_d,2.f) + pow(y_d,2.f)), 3.f/2.f)), 2.f));
-
-        if(1/k <= min_radius){
-            scaled_speed = minimum_scaled_speed;
-        }else if ( 1/k>= max_radius)
-        {
-            scaled_speed = maximum_scaled_speed; 
-        }else{
-            scaled_speed = minimum_scaled_speed + (maximum_scaled_speed - minimum_scaled_speed)*(1/k-min_radius)/max_radius; //räta linkens ekvation
-        }
-
-        K1.row(t) << scaled_speed;
-    }
-
-    K << K1 , Add_points;
-}
-
-void Planner::calc_K_comp(int size, int size_next)
+Eigen::MatrixXf Planner::calc_K(int size, Eigen::MatrixXf const& s)
 {
-    K = Eigen::MatrixXf(size+size_next,1); //Eigen kan inte K << K, Addpoints1 därav K1
-    Eigen::MatrixXf K1(size,1);
+    Eigen::MatrixXf K_tmp {size,1};
     
     for(int t = 0; t < size; t++) 
     //Derivation and second Derivation of the Bezier curve to calculate the curvature in each point
@@ -408,58 +321,30 @@ void Planner::calc_K_comp(int size, int size_next)
         float scaled_speed; // max steering is 0.5
         float k = sqrtf(pow( (x_d*y_dd - y_d*x_dd)/(pow( (pow(x_d,2.f) + pow(y_d,2.f)), 3.f/2.f)), 2.f));
 
-        if(1/k <= min_radius){
+        if(1/k <= min_radius) {
             scaled_speed = minimum_scaled_speed;
-        }else if ( 1/k>= max_radius)
-        {
+        }
+        else if ( 1/k>= max_radius) {
             scaled_speed = maximum_scaled_speed; 
-        }else{
+        }
+        else {
             scaled_speed = minimum_scaled_speed + (maximum_scaled_speed - minimum_scaled_speed)*(1/k-min_radius)/max_radius; //räta linkens ekvation
         }
 
-        K1.row(t) << scaled_speed;
+        K_tmp.row(t) << scaled_speed;
     }
 
-    Eigen::MatrixXf K2(size_next,1);
-    
-    for(int t = 0; t < size_next; t++) 
-    //Derivation and second Derivation of the Bezier curve to calculate the curvature in each point
+    return K_tmp;
+}
+
+Eigen::MatrixXf Planner::calc_K_endpoints(int size)
+{
+    Eigen::MatrixXf points(size,1);
+
+    for(int i = 0; i < points.rows(); i++)
     {
-        float step = t / (size*1.0f);
-        float a = s_next.coeff(0,0);
-        float b = s_next.coeff(1,0);
-        float c = s_next.coeff(2,0);
-        float d = s_next.coeff(3,0);
-        float e = s_next.coeff(0,1);
-        float f = s_next.coeff(1,1);
-        float g = s_next.coeff(2,1);
-        float h = s_next.coeff(3,1);
-
-        float x_d = 3*((d-3*c+3*b-a)*pow(step,2) + 2*(c-2*b+a)*step + (b-a));
-
-        float y_d = 3*((h-3*g+3*f-e)*pow(step,2) + 2*(g-2*f+e)*step + (f-e));
-
-        float x_dd = 6*((d-3*c+3*b-a)*step + (c-2*b+a));
-
-        float y_dd = 6*((h-3*g+3*f-e)*step + (g-2*f+e));
-
-        //absolute value... 
-        float scaled_speed; // max steering is 0.5
-        float k = sqrtf(pow( (x_d*y_dd - y_d*x_dd)/(pow( (pow(x_d,2.f) + pow(y_d,2.f)), 3.f/2.f)), 2.f));
-
-        if(1/k <= min_radius){
-            scaled_speed = minimum_scaled_speed;
-        }else if ( 1/k>= max_radius)
-        {
-            scaled_speed = maximum_scaled_speed; 
-        }else{
-            scaled_speed = minimum_scaled_speed + (maximum_scaled_speed - minimum_scaled_speed)*(1/k-min_radius)/max_radius; //räta linkens ekvation
-        }
-
-        K2.row(t) << scaled_speed;
+        points.row(i) << minimum_scaled_speed;
     }
-
-    K << K1 , K2;
 }
 
 void Planner::calc_ref()
@@ -577,7 +462,7 @@ std::string Planner::getBezier_points()
     std::ostringstream ss;
     for(int i {0}; i < 4; i++)
     {
-        ss << s.coeff(i,0) << "," << s.coeff(i,1) << ";";
+        ss << s_curr.coeff(i,0) << "," << s_curr.coeff(i,1) << ";";
     }
 
     return ss.str();

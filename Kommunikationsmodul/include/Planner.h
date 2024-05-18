@@ -56,7 +56,7 @@ private:
     Eigen::MatrixXf K;
 
     // the 4 points that define the bezier curve
-    Eigen::MatrixXf s;
+    Eigen::MatrixXf s_curr;
     Eigen::MatrixXf s_next;
 
     // default values used for determining speed 
@@ -98,13 +98,11 @@ private:
     Gate calc_prev_gate(Gate&, int);
 
     // calculate the parameter curve
-    void calc_P(int size, float x_start, float y_start, float start_angle,
-                float x_goal, float y_goal, float goal_angle);
-    void calc_P_comp(int, float, float, float, float, float, float, int,
-                     float, float, float);
+    Eigen::MatrixXf calc_P(int size, Eigen::MatrixXf const& s);
+    Eigen::MatrixXf calc_P_endpoints(int, float, float, float);
     // calculate the curvature of the curve in each point
-    void calc_K(int size);
-    void calc_K_comp(int size, int);
+    Eigen::MatrixXf calc_K(int size, Eigen::MatrixXf const& s);
+    Eigen::MatrixXf calc_K_endpoints(int size);
     // calculat the all the usefull stuff, this requires P and K
     void calc_ref();
 };
