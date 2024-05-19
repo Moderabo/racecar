@@ -126,3 +126,10 @@ void MQTT_Connection::pubCurve(std::string msg)
 	//std::cout << "Curve: " << msg << '\n';
         m_curveTopic.publish(msg);
 }
+
+void MQTT_Connection::pubLap(std::string msg)
+{
+        // Publishes current lap.
+
+        m_lapTopic.publish(msg);
+}

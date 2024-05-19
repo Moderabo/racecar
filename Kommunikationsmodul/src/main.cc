@@ -52,6 +52,12 @@ int main(int argc, const char * argv[])
     int state {0};
     std::vector<float> commands;
 
+    i2c_connection.steer(-1);
+    sleep(1);
+    i2c_connection.steer(1);
+    sleep(1);
+    i2c_connection.steer(0);
+
     // fetch result and print it out
     while ( true )
     {
@@ -72,15 +78,11 @@ int main(int argc, const char * argv[])
                 case 0:  // Idle
                     lidar.stop();
                     i2c_connection.steer(0);
-                    sleep(0.05);
                     i2c_connection.gas(0);
-                    sleep(0.01);
                     break;
                 case 1:  // Manual
                     i2c_connection.steer(commands.at(1));
-                    sleep(0.05);
                     i2c_connection.gas(commands.at(2));
-                    sleep(0.01);
                     break;
                 case 2:  // Automatic
                     planner.set_maximum_scaled_speed(commands.at(1));
@@ -94,9 +96,7 @@ int main(int argc, const char * argv[])
                 default:
                     lidar.stop();
                     i2c_connection.steer(0);
-                    sleep(0.05);
                     i2c_connection.gas(0);
-                    sleep(0.01);
                     break;
             }
         }
@@ -135,6 +135,7 @@ int main(int argc, const char * argv[])
             mqtt_connection.pubCones(cones);
             mqtt_connection.pubBezier(planner.getBezier_points());
             mqtt_connection.pubCurve(planner.getBezier_curve());
+            mqtt_connection.pubLap(planner.getLap());
 
             float angle_to_steer = planner.getRefAngle();
             angle_to_steer = std::max(-1.f, std::min(angle_to_steer, 1.f));

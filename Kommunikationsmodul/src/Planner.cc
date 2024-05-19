@@ -13,9 +13,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         {
             segment_nr = 0;
             lap_nr += 1;
-            std::cout << "lap: " << lap_nr << std::endl;
         }
-        std::cout << "Segment: " << segment_nr << std::endl;
     }
         
     if (isInGate(prev_gate))
@@ -41,9 +39,6 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
             && segment_nr >= 0 && !in_a_gate)
         {
             update_segment(prev_gate, next_gate);
-            //Gate gate_tmp {segments.at(segment_nr).gate};
-            //std::cout << "x: " << gate_tmp.x << "\ty: " << gate_tmp.y
-            //          << "\tangle: " << gate_tmp.angle << std::endl;
         }
 
         // take out the coordinates from the gates
@@ -84,7 +79,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         if (lap_nr == 0 && next_gate.type == 2 && sqrtf(pow(x_goal,2)+pow(y_goal,2)) < 1000)
         {
             current_state = stop;
-            timer = 5;
+            timer = 3;
         }
         break;
     }
@@ -182,6 +177,24 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
 
     case finish: // when the race is finished do nothing!
     {
+        if (timer < 0)
+        {
+            timer += T_c;
+            if (timer > 0)
+            {
+                timer = 0.5;
+            }
+            refrence_angle = -1;
+        }
+        else
+        {
+            timer -= T_c;
+            if (timer < 0)
+            {
+                timer = -0.5;
+            }
+            refrence_angle = 1;
+        }
         refrence_speed = 0;
         break;
     }
@@ -480,6 +493,14 @@ std::string Planner::getBezier_points()
     {
         ss << s_curr.coeff(i,0) << "," << s_curr.coeff(i,1) << ";";
     }
+
+    return ss.str();
+}
+
+std::string Planner::getLap()
+{
+    std::ostringstream ss;
+    ss << lap_nr;
 
     return ss.str();
 }

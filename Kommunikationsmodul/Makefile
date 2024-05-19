@@ -29,5 +29,5 @@ dir:
 -include *.d
 
 clean:
-	@ \rm -rf *.o *.out *.d
+	@ \rm -rf $(OBJDIR)/*.o *.out $(OBJDIR)/*.d
 

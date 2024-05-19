@@ -34,8 +34,13 @@ class XboxController(object):
             self._monitor_thread.daemon = True
 
             self._monitor_thread.start()
+            self.existing = True
         else:
-            print("No controller detected.")
+            self.existing = False
+            return
+
+    def controller_exists(self):
+        return self.existing
 
     def read(self): # return the buttons/triggers that you care about in this methode
         x_cord = self.LeftJoystickX

@@ -25,6 +25,7 @@ public:
 	void pubBezier(std::string);
  	void pubCurve(std::string msg);
 	void pubCones(std::vector<Cone>&);
+	void pubLap(std::string msg);
 
 private:
 	mqtt::async_client m_cli{"10.42.0.1","RPi" };
@@ -33,5 +34,5 @@ private:
 	mqtt::topic m_conesTopic{m_cli,"cones" ,1 };
 	mqtt::topic m_bezierTopic{m_cli,"bezier" ,1 };
         mqtt::topic m_curveTopic{m_cli,"curve" ,1 };
-
+	mqtt::topic m_lapTopic{m_cli,"lap" ,1 };
 };
