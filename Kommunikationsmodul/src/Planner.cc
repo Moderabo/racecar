@@ -240,12 +240,17 @@ Gate Planner::calc_next_gate(Gate& gate, int seg_nr)
 
 Gate Planner::calc_prev_gate(Gate& gate, int seg_nr)
 {
+    // Change gate-coordinate-system to next gate in segment
     float angle_pre = -segments.at(seg_nr).gate.angle;
     float x_pre = -segments.at(seg_nr).gate.x;
-    float y_pre = segments.at(seg_nr).gate.y;
+    float y_pre = -segments.at(seg_nr).gate.y;
+    
+    float x_ {x_pre*cosf(angle_pre)-y_pre*sinf(angle_pre)};
+    float y_ {x_pre*sinf(angle_pre)+y_pre*cosf(angle_pre)};
 
-    float x {x_pre*cosf(gate.angle)-y_pre*sinf(gate.angle)};
-    float y {x_pre*sinf(gate.angle)+y_pre*cosf(gate.angle)};
+    // Move to current lidar coordinate system
+    float x {x_*cosf(gate.angle)-y_*sinf(gate.angle)};
+    float y {x_*sinf(gate.angle)+y_*cosf(gate.angle)};
 
     Gate next_gate;
     next_gate.x = gate.x + x;
