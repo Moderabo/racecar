@@ -67,6 +67,12 @@ class Terminal(tk.Frame):
             self.parent.stop_drive_data()
         elif command_list[0] == "graph":
             self.parent.create_graph(command_list[1])
+        elif command_list[0] == "/wiggle":
+            self.parent.wiggle()
+        elif command_list[0] == "/dance":
+            self.parent.dance(int(command_list[1]))
+        elif command_list[0] == "/drigt":
+            self.parent.drift()
         elif command_list[0] == "setup":
             try:
                 self.parent.setup_mqtt_protocol()

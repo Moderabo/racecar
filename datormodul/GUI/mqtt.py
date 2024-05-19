@@ -58,8 +58,16 @@ class Mqtt():
             message.payload = message.payload.decode("utf-8")
             information.data_list.append(message.payload)
             information.data_list.pop(0)
+            velocity_data = message.payload.split(" ")
+            velocity = float(velocity_data[1])
+            information.data["Speed"] = velocity
             self.write_to_file("Vel: " + message.payload)
 
+        elif message.topic == "lap":
+            message.payload = message.payload.decode("utf-8")
+            lap = int(message.payload)
+            information.data["Lap"] = lap
+            self.write_to_file("Lap: " + message.payload)
 
         elif message.topic == "cones":
             message.payload = message.payload.decode("utf-8")
@@ -117,7 +125,7 @@ class Mqtt():
         else:
             # we should always subscribe from on_connect callback to be sure
             # our subscribed is persisted across reconnections.
-            client.subscribe([("commands",0), ("data", 0), ("cones", 0), ("curve", 0), ("bezier", 0)])
+            client.subscribe([("commands",0), ("data", 0), ("cones", 0), ("curve", 0), ("bezier", 0), ("lap", 0)])
 
     def on_publish(self, client, userdata, mid, reason_code, properties):
         # reason_code and properties will only be present in MQTTv5. It's always unset in MQTTv3

@@ -243,6 +243,41 @@ class GUI(tk.Tk):
     def create_graph(self, file):
         self.graphs.append(graph.Graph(file))
 
+    def wiggle(self):
+        #self.change_driving_mode("wasd")
+        msg_info = self.mqtt_client.publish("commands", "1 -1 0", qos=1)
+        self.unacked_publish.add(msg_info.mid)
+        msg_info.wait_for_publish()
+        time.sleep(0.2)
+        msg_info = self.mqtt_client.publish("commands", "1 1 0", qos=1)
+        self.unacked_publish.add(msg_info.mid)
+        msg_info.wait_for_publish()
+        time.sleep(0.2)
+        #self.change_driving_mode("idle")
+
+    def dance(self, times):
+        #self.change_driving_mode("wasd")
+        for i in range(times):
+            msg_info = self.mqtt_client.publish("commands", "1 -1 0", qos=1)
+            self.unacked_publish.add(msg_info.mid)
+            msg_info.wait_for_publish()
+            time.sleep(0.2)
+            msg_info = self.mqtt_client.publish("commands", "1 1 0", qos=1)
+            self.unacked_publish.add(msg_info.mid)
+            msg_info.wait_for_publish()
+            time.sleep(0.2)
+        #self.change_driving_mode("idle")
+
+    def drift(self):
+        #self.change_driving_mode("wasd")
+        time.sleep(1)
+        msg_info = self.mqtt_client.publish("commands", "1 -1 0.5", qos=1)
+        self.unacked_publish.add(msg_info.mid)
+        msg_info.wait_for_publish()
+
+
+
+
 # Create an instance of GUI and start the loop.
 UI = GUI("CarGoBrr2")
 UI.mainloop()

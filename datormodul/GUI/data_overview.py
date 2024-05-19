@@ -14,7 +14,7 @@ class DataOverview(tk.Frame):
         
         text_value = ""
         for key in information.data.keys():
-            text_value += str(key) + "\n"
+            text_value += key + "\n"
         text_area_info.config(text=text_value)
 
         self.text_area_values = tk.Message(info_widget, font=("Times New Roman", 15), justify="left", anchor="nw", bg="white", borderwidth=0, highlightthickness=0)
@@ -24,5 +24,4 @@ class DataOverview(tk.Frame):
         text_value = ""
         for value in information.data.values():
             text_value += str(value) + "\n"
-        text_value += str(information.data_list[-1])
         self.text_area_values.config(text=text_value)

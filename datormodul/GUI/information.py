@@ -1,6 +1,5 @@
-data = {"Hastighet"         : 12.4,
-        "Svängradie"        : 34.1,
-        "Hastighet lidar"   : 10.1}
+data = {"Speed" : 0,
+        "Lap"   : 0}
 
 data_list = ["0", "0", "0"]
 
