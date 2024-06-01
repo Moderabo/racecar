@@ -16,11 +16,13 @@ class I2CConnection
 public:
 	I2CConnection()
 	{
+        // AVR adress 25 for speed control
 		fd_CONTROL = wiringPiI2CSetup(25);
 		if (fd_CONTROL == -1){
 			std::cout << "Failed to init I2C.\n";
 		}
 
+        // AVR adress 34 for steer control
 		fd_SENSOR = wiringPiI2CSetup(34);
 		if (fd_SENSOR  == -1){
             std::cout << "Failed to init I2C.\n";
@@ -32,25 +34,30 @@ public:
     }
 
     void gas(float x)
+    // Set speed control in interval [-1,1]
     {
         int result;
         if ( x < -1 || x > 1 )
         {
             return;
         }
+        // Convert from [-1,1] to [0,0xffff]
         uint16_t x_2byte {static_cast<uint16_t>((0xffff * (1 + x)) / 2)};
         //std::cout << "Gas: " << x_2byte << '\n';
         result = wiringPiI2CWriteReg16(fd_CONTROL, 0x02, x_2byte);
     }
 
 
-    void steer(float x)  // -1 left, 1 right
+    void steer(float x)
+    // Set steer control in interval [-1,1]
+    //  -1 full left, 1 full right
     {
         int result;
         if ( x < -1 || x > 1 )
         {
             return;
         }
+        // Convert from [-1,1] to [0,0xffff]
         uint16_t x_2byte {static_cast<uint16_t>((0xffff * (1 + x)) / 2)};
         //std::cout << "Steer: " << x_2byte << '\n';
         result = wiringPiI2CWriteReg16(fd_CONTROL, 0x01, x_2byte);
@@ -58,6 +65,7 @@ public:
 
 
     int getSpeed()
+    // Get speed in mm/s
     {
         int result;
 

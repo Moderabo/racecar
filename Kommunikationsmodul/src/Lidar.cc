@@ -46,6 +46,7 @@ void Lidar::update()
         return;
     }
 
+    // Sort data in ascending angle
     lidar->ascendScanData(nodes, count);
 
     // initialize previous distance to something very big (100 meters)

@@ -33,8 +33,9 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
     // based on the state you should do different things
     switch(current_state) 
     {
-    case calibration:     // calibration
+    case calibration:
     {
+        // If both gates are real, save segment information
         if (prev_gate.type != -2 && next_gate.type != -2
             && segment_nr >= 0 && !in_a_gate)
         {
@@ -100,8 +101,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         if (lap_nr > 5)
             current_state = finish;
 
-        Gate next_next_gate;
-        
+        // Choose closest gate as the reference point to extend the segments from
         if (in_a_gate && isInGate(prev_gate))
         {
                 next_gate = prev_gate;
@@ -129,7 +129,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
         {
             next_gate = calc_next_gate(prev_gate, segment_nr);
         }
-        next_next_gate = calc_next_gate(next_gate,
+        Gate next_next_gate = calc_next_gate(next_gate,
                                         (segment_nr+1) % segments.size());
 
         // take out the coordinates from the gates
@@ -177,6 +177,7 @@ void Planner::update(Gate prev_gate, Gate next_gate, float T_c)
 
     case finish: // when the race is finished do nothing!
     {
+        // Do victory dance!
         if (timer < 0)
         {
             timer += T_c;
@@ -233,7 +234,7 @@ void Planner::update_segment(Gate& prev_gate, Gate& next_gate)
 
 Gate Planner::calc_next_gate(Gate& gate, int seg_nr)
 {
-    // 
+    // Grab segment data
     float angle_pre = segments.at(seg_nr).gate.angle;
     float x_pre = segments.at(seg_nr).gate.x;
     float y_pre = segments.at(seg_nr).gate.y;
@@ -253,11 +254,12 @@ Gate Planner::calc_next_gate(Gate& gate, int seg_nr)
 
 Gate Planner::calc_prev_gate(Gate& gate, int seg_nr)
 {
-    // Change gate-coordinate-system to next gate in segment
+    // Change coordinate system to next gate in segment
     float angle_pre = -segments.at(seg_nr).gate.angle;
     float x_pre = -segments.at(seg_nr).gate.x;
     float y_pre = -segments.at(seg_nr).gate.y;
     
+    // Rotate saved segment to next_gate coordinate system
     float x_ {x_pre*cosf(angle_pre)-y_pre*sinf(angle_pre)};
     float y_ {x_pre*sinf(angle_pre)+y_pre*cosf(angle_pre)};
 
