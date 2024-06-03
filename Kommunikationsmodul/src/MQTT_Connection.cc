@@ -6,61 +6,46 @@ MQTT_Connection::MQTT_Connection()
 
 	int QOS = 1;
 	std::string COMMAND_TOPIC = "commands";
-	// Create connect options
-
+	
+	// Creates connect options
 	auto connOpts = mqtt::connect_options_builder()
 		.clean_session(false)
 		.finalize();
 
-	// Start consumer before connecting to make sure to not miss messages
 
+	
+	// Start consuming messages
 	m_cli.start_consuming();
 
-        // Connect to the server
-
-	std::cout << "Connecting to the MQTT server..." << std::flush;
+	// Initiate connection to broker with connect options
 	auto tok = m_cli.connect(connOpts);
 
-	// Getting the connect response will block waiting for the
-	// connection to complete.
+	// Check if the session is already present
 	auto rsp = tok->get_connect_response();
 
-	// If there is no session present, then we need to subscribe, but if
-	// there is a session, then the server remembers us and our
-	// subscriptions.
 	if (!rsp.is_session_present())
 		m_cli.subscribe(COMMAND_TOPIC, QOS)->wait();
-
-	std::cout << "OK" << std::endl;
-
-	// Consume messages
-	// This just exits if the client is disconnected.
-	// (See some other examples for auto or manual reconnect)
-	std::cout << "Waiting for messages on topic: '" << COMMAND_TOPIC << "'" << std::endl;
 
 }
 
 MQTT_Connection::~MQTT_Connection()
 {
+	//Disconnects client if its not already disconnected.
+
 	if (m_cli.is_connected()) {
-		std::cout << "\nShutting down and disconnecting from the MQTT server..." << std::flush;
 		m_cli.stop_consuming();
 		m_cli.disconnect()->wait();
-		std::cout << "OK" << std::endl;
-	}
-	else {
-		std::cout << "\nClient was disconnected" << std::endl;
 	}
 
 }
 
 std::vector<float> MQTT_Connection::receiveMsg()
 {
-
 	// Takes message and returns data form the message in form a vector.
 
 	std::string commands;
 	std::vector<float> commands_value_list;
+
 	//Takes latest message from que if there is any.
 	auto msg = m_cli.try_consume_message_for(std::chrono::seconds(0));
 	if (!msg)
@@ -78,7 +63,6 @@ std::vector<float> MQTT_Connection::receiveMsg()
        		}
 		msg = tmp_msg;
 	}
-
 
 	//Converts message to float commands:
 	std::stringstream test(msg->to_string());
@@ -101,7 +85,7 @@ void MQTT_Connection::pubSpeed(float time, float speed)
 
 void MQTT_Connection::pubCones(std::vector<Cone> &cones)
 {
-        // Publishes all cones.
+    // Publishes all cones.
 
 	std::string payload = "";
 
@@ -114,22 +98,21 @@ void MQTT_Connection::pubCones(std::vector<Cone> &cones)
 
 void MQTT_Connection::pubBezier(std::string msg)
 {
-        // Publishes Bezier points.
-	//std::cout << "Points: " << msg << '\n';
+    // Publishes Bezier points.
 
-        m_bezierTopic.publish(msg);
+    m_bezierTopic.publish(msg);
 }
 
 void MQTT_Connection::pubCurve(std::string msg)
 {
-        // Publishes all curve points.
-	//std::cout << "Curve: " << msg << '\n';
-        m_curveTopic.publish(msg);
+    // Publishes all curve points.
+
+    m_curveTopic.publish(msg);
 }
 
 void MQTT_Connection::pubLap(std::string msg)
 {
-        // Publishes current lap.
+    // Publishes current lap.
 
-        m_lapTopic.publish(msg);
+    m_lapTopic.publish(msg);
 }
