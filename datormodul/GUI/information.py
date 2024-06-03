@@ -1,3 +1,4 @@
+# Data other files need. Think of these as global variables.
 data = {"Speed" : 0,
         "Lap"   : 0}
 

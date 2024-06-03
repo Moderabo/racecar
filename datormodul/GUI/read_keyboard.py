@@ -1,5 +1,6 @@
 from pynput import keyboard
 
+# Class to read the keyboard input.
 class Keyboard():
 
     def __init__(self):

@@ -2,13 +2,17 @@ import tkinter as tk
 
 import information
 
+# This class sets up the buttons the user can press in the GUI.
 class Interactions(tk.Frame):
 
     def __init__(self, parent):
+        # Set up the widget.
         self.parent = parent
         interaction_widget = tk.Frame(parent, bg="green", borderwidth=0, highlightthickness=0)
         interaction_widget.place(x=500, y=300, height=300, width=300)
         interaction_widget.bind("<Leave>", lambda event: self.change_text("CarGoBRR2"))
+
+        # The widget will have more widgets in it defined below.
 
         #=====Parameter for auto-driving widget=====
         auto_param_widget = tk.Frame(interaction_widget, bg="blue", borderwidth=0, highlightthickness=0)
@@ -128,12 +132,14 @@ class Interactions(tk.Frame):
         exit_button.bind("<Enter>", lambda event: self.change_text("Exit and close the GUI."))
         #==============
 
+    # Reset the world-overview widget.
     def reset(self):
         information.parameters = information.default_parameters
         for i in range(6):
             self.parameters[i].set(information.parameters[i])
         self.parent.path_widget.reset()
 
+    # Changes the driving mode.
     def new_command(self, mode):
         if mode == "manual" and self.parent.controller.controller_exists() == False:
             self.change_text("No controller detected.")
@@ -152,6 +158,7 @@ class Interactions(tk.Frame):
         except:
             self.explanation_widget.configure(text="Could not connect to car.")
 
+    # Changes the text in the explanation box.
     def change_text(self, text):
         self.explanation_widget.configure(text=text)
 
@@ -165,6 +172,7 @@ class Interactions(tk.Frame):
                 self.parameter_entries[i].configure(bg="red")
                 continue
         
+        # Gives the currently active button a gray tint.
         self.idle_button.configure(bg="#E6E6E6")
         self.auto_button.configure(bg="#E6E6E6")
         self.manual_button.configure(bg="#E6E6E6")
@@ -172,28 +180,10 @@ class Interactions(tk.Frame):
 
         if self.current_drive_mode == "idle":
             self.idle_button.configure(bg="gray")
-            #self.auto_button.configure(bg="#E6E6E6")
-            #self.manual_button.configure(bg="#E6E6E6")
-            #self.wasd_button.configure(bg="#E6E6E6")
         elif self.current_drive_mode == "auto":
-            #self.idle_button.configure(bg="#E6E6E6")
             self.auto_button.configure(bg="gray")
-            #self.manual_button.configure(bg="#E6E6E6")
-            #self.wasd_button.configure(bg="#E6E6E6")
         elif self.current_drive_mode == "manual":
-            #self.idle_button.configure(bg="#E6E6E6")
-            #self.auto_button.configure(bg="#E6E6E6")
             self.manual_button.configure(bg="gray")
-            #self.wasd_button.configure(bg="#E6E6E6")
         elif self.current_drive_mode == "wasd":
-            #self.idle_button.configure(bg="#E6E6E6")
-            #self.auto_button.configure(bg="#E6E6E6")
-            #self.manual_button.configure(bg="#E6E6E6")
-            self.wasd_button.configure(bg="gray")
-        #else:
-            #self.idle_button.configure(bg="#E6E6E6")
-            #self.auto_button.configure(bg="#E6E6E6")
-            #self.manual_button.configure(bg="#E6E6E6")
-            #self.wasd_button.configure(bg="#E6E6E6")
-            
+            self.wasd_button.configure(bg="gray")            
         return

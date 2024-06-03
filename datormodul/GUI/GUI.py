@@ -240,11 +240,12 @@ class GUI(tk.Tk):
         self.after(100, self.steering)
         return
     
+    # Create a graph from specified recorded data.
     def create_graph(self, file):
         self.graphs.append(graph.Graph(file))
 
+    # Just wiggles the car a bit.
     def wiggle(self):
-        #self.change_driving_mode("wasd")
         msg_info = self.mqtt_client.publish("commands", "1 -1 0", qos=1)
         self.unacked_publish.add(msg_info.mid)
         msg_info.wait_for_publish()
@@ -253,10 +254,9 @@ class GUI(tk.Tk):
         self.unacked_publish.add(msg_info.mid)
         msg_info.wait_for_publish()
         time.sleep(0.2)
-        #self.change_driving_mode("idle")
 
+    # Wiggles the car for specified time.
     def dance(self, times):
-        #self.change_driving_mode("wasd")
         for i in range(times):
             msg_info = self.mqtt_client.publish("commands", "1 -1 0", qos=1)
             self.unacked_publish.add(msg_info.mid)
@@ -266,10 +266,9 @@ class GUI(tk.Tk):
             self.unacked_publish.add(msg_info.mid)
             msg_info.wait_for_publish()
             time.sleep(0.2)
-        #self.change_driving_mode("idle")
 
+    # Just turn up the gas and drift bby!!!
     def drift(self):
-        #self.change_driving_mode("wasd")
         time.sleep(1)
         msg_info = self.mqtt_client.publish("commands", "1 -1 0.5", qos=1)
         self.unacked_publish.add(msg_info.mid)

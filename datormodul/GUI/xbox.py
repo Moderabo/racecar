@@ -2,6 +2,7 @@ from inputs import get_gamepad, devices
 import math
 import threading
 
+# Class to read the controller input.
 class XboxController(object):
     MAX_TRIG_VAL = math.pow(2, 8)
     MAX_JOY_VAL = math.pow(2, 15)
@@ -42,7 +43,7 @@ class XboxController(object):
     def controller_exists(self):
         return self.existing
 
-    def read(self): # return the buttons/triggers that you care about in this methode
+    def read(self):
         x_cord = self.LeftJoystickX
         y_cord = self.LeftJoystickY
         rb = self.RightBumper

@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+# Creates a grpah of the velocity in respect to time..
 class Graph():
 
     def __init__(self, file):
